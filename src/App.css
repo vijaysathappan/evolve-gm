@@ -1,0 +1,55 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.panel {
+  background-color: var(--bg-panel);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Panel Sizing */
+.side-panel {
+  width: 320px;
+  min-width: 280px;
+}
+
+.center-panel {
+  flex: 1;
+  min-width: 400px;
+}
+
+/* Common Header for Panels */
+.panel-header {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}

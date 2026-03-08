@@ -1,0 +1,46 @@
+.elegant-tree-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tree-branch, .tree-trunk {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+}
+
+.main-trunk {
+  animation: growBranch 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
+.b1 { animation: growBranch 1.2s cubic-bezier(0.165, 0.84, 0.44, 1) 0.3s forwards; }
+.b2 { animation: growBranch 1.2s cubic-bezier(0.165, 0.84, 0.44, 1) 0.5s forwards; }
+.b3 { animation: growBranch 1.0s cubic-bezier(0.165, 0.84, 0.44, 1) 0.6s forwards; }
+.b4 { animation: growBranch 1.0s cubic-bezier(0.165, 0.84, 0.44, 1) 0.8s forwards; }
+
+@keyframes growBranch {
+  to { stroke-dashoffset: 0; }
+}
+
+.tree-node {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.n1 { animation: popNode 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.2s forwards; transform-origin: 25px 25px; }
+.n2 { animation: popNode 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.4s forwards; transform-origin: 85px 35px; }
+.n3 { animation: popNode 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.3s forwards; transform-origin: 15px 55px; }
+.n4 { animation: popNode 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.5s forwards; transform-origin: 90px 60px; }
+.n5 {
+  animation: popNode 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.5s forwards, pulseGlow 3s infinite alternate 2s;
+  transform-origin: 50px 10px;
+}
+
+@keyframes popNode {
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)); }
+  100% { transform: scale(1.3); filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)); }
+}

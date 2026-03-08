@@ -1,0 +1,209 @@
+/* Styles for Learn Dashboard capturing the Google Notebook LM aesthetic */
+.dashboard-container {
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+}
+
+.dash-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.dash-main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 3rem;
+}
+
+.dash-tabs {
+  margin-bottom: 3rem;
+}
+
+.tab-pill {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius-pill);
+  transition: all 0.2s;
+}
+
+.tab-pill:hover {
+  background-color: var(--bg-surface);
+}
+
+.tab-pill.active {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.sort-toggle {
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.sort-btn {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+}
+
+.sort-btn.active {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.create-nb-btn {
+  background-color: var(--text-primary);
+  color: var(--bg-app);
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-pill);
+  gap: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.create-nb-btn:hover {
+  opacity: 0.9;
+}
+
+.nb-section {
+  margin-bottom: 4rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.nb-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.featured-grid {
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 200px;
+}
+
+.recent-grid {
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 220px;
+}
+
+.nb-card {
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.nb-card.image-bg {
+  background-size: cover;
+  background-position: center;
+}
+
+/* Simulated Image Backgrounds via gradients for now */
+.bg-1 { background: linear-gradient(135deg, #1e3a8a, #0f172a); }
+.bg-2 { background: linear-gradient(135deg, #065f46, #022c22); }
+.bg-3 { background: linear-gradient(135deg, #701a75, #4a044e); }
+
+.nb-card .overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.1) 100%);
+  z-index: 1;
+}
+
+.nb-card-content {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  padding: 1.5rem;
+}
+
+.nb-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255,255,255,0.1);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  backdrop-filter: blur(4px);
+  margin-bottom: 0.75rem;
+}
+
+.nb-card h3 {
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.nb-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.nb-card.create-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.nb-card.create-card:hover {  
+  background-color: var(--bg-surface-hover);
+}
+
+.create-icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--bg-app);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.nb-card.regular {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  transition: background-color 0.2s;
+}
+
+.nb-card.regular:hover {
+  background-color: var(--bg-surface);
+}
+
+.nb-header-icon {
+  margin-bottom: 1.5rem;
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-app);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

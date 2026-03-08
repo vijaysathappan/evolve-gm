@@ -1,0 +1,252 @@
+.gemini-sidebar {
+  height: 100vh;
+  background-color: var(--bg-sidebar);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1rem 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.gemini-sidebar.expanded {
+  width: 250px;
+}
+
+.gemini-sidebar.collapsed {
+  width: 68px;
+}
+
+.sidebar-header {
+  padding: 0 12px;
+  margin-bottom: 24px;
+}
+
+.menu-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.menu-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.new-chat-wrapper {
+  padding: 0 12px;
+  margin-bottom: 32px;
+}
+
+.new-chat-btn {
+  background-color: transparent;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  padding: 0 12px;
+  gap: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.gemini-sidebar.expanded .new-chat-btn {
+  width: 140px;
+}
+
+.new-chat-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.recent-label {
+  padding: 0 24px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  margin-top: 12px;
+  opacity: 0;
+  animation: fadeIn 0.3s 0.1s forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.nav-menu {
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 12px 0 20px;
+  min-height: 40px;
+  width: 100%;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  border-radius: 0 20px 20px 0;
+  margin-right: 12px;
+  white-space: nowrap;
+}
+
+.history-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.history-actions {
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.2s;
+  gap: 4px;
+}
+
+.history-item:hover .history-actions {
+  opacity: 1;
+}
+
+.context-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.context-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.history-icon, .history-item svg {
+  flex-shrink: 0;
+  color: var(--text-primary); /* Brighter icon per user request "light colour logo" */
+}
+
+.scrollable-menu {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 220px);
+}
+
+.nav-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.nav-label {
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.gemini-sidebar.expanded .nav-label {
+  opacity: 1;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.show-more-btn {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 12px 24px;
+  text-align: left;
+  transition: color 0.2s;
+}
+
+.show-more-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Modal specific */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+}
+
+.settings-modal {
+  background-color: var(--bg-input);
+  width: 500px;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.gap-4 { gap: 16px; margin-top: 24px; }
+
+.setting-card {
+  padding: 16px;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  gap: 16px;
+}
+
+.setting-icon { color: var(--accent-brand); }
+
+.setting-title { font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
+.setting-desc { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .gemini-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    /* matches main so it looks like a drawer overlay */
+    background-color: var(--bg-app); 
+  }
+  
+  .gemini-sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 280px; /* when collapsed, it's just hidden off screen */
+  }
+  
+  .gemini-sidebar.expanded {
+    transform: translateX(0);
+    width: 280px;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  
+  .settings-modal {
+    width: 90%;
+    padding: 16px;
+  }
+}
