@@ -519,10 +519,15 @@
     font-size: 1.5rem;
   }
   .chat-input-wrapper {
-    padding: 8px 10px;
+    padding: 10px 12px;
+    width: calc(100% - 24px); /* Account for center-content padding */
+    max-width: 100%;
+    margin: 0 auto 8px auto; /* Lift it and center it */
+    border-radius: var(--radius-md); 
   }
   .center-content {
-    padding: 0 8px;
+    padding: 0 12px;
+    width: 100%;
   }
   .user-bubble {
     max-width: 95%;
