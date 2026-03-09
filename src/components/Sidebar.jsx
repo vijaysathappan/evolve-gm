@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Plus, MessageSquare, Settings, HelpCircle, X, Shield, Lock, FileText, Share2, Trash2, CreditCard } from 'lucide-react';
+import BookLogo from './BookLogo';
 import './Sidebar.css';
 
 const MOCK_HISTORY = [
@@ -45,7 +46,7 @@ export default function Sidebar() {
     <>
       <aside className={`gemini-sidebar flex-col justify-between ${expanded ? 'expanded' : 'collapsed'}`}>
         <div className="sidebar-top flex-col">
-          <div className="sidebar-header flex-row items-center">
+          <div className="sidebar-header">
             <button 
               className="icon-btn menu-btn" 
               onClick={toggleSidebar}
@@ -53,6 +54,10 @@ export default function Sidebar() {
             >
               <Menu size={24} />
             </button>
+            
+            <div className="sidebar-logo-container flex-col items-center justify-center">
+              <BookLogo size="32px" />
+            </div>
           </div>
 
           <div className="new-chat-wrapper">

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, Sparkles, ChevronDown, AlignLeft } from 'lucide-react';
+import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, Sparkles, ChevronDown, AlignLeft, X, User, Settings, LogOut } from 'lucide-react';
+import BookLogo from './BookLogo';
 import './MainPad.css';
 
 export default function MainPad() {
@@ -9,19 +10,94 @@ export default function MainPad() {
   const [messages, setMessages] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [preRecordingText, setPreRecordingText] = useState('');
+  const recognitionRef = useRef(null);
+  
+  const userName = "Vijay";
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const historyRef = useRef(null);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let sessionTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          sessionTranscript += (i > 0 ? ' ' : '') + transcript;
+          
+          // Add ellipsis only for the very last interim result
+          if (!event.results[i].isFinal && i === event.results.length - 1) {
+            sessionTranscript += '...';
+          }
+        }
+        
+        // Sync with pre-existing text to avoid duplication
+        const fullText = preRecordingText 
+          ? preRecordingText.trim() + ' ' + sessionTranscript.trim()
+          : sessionTranscript.trim();
+          
+        setText(fullText);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+        // Clean up any trailing "..." when recording ends
+        setText(prev => typeof prev === 'string' ? prev.split('...')[0].trim() : '');
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current.stop();
+    } else {
+      setPreRecordingText(text); // Save current text before starting
+      recognitionRef.current.start();
+      setIsRecording(true);
+    }
+  };
 
   const isChatting = messages.length > 0;
 
   // Auto-resize textarea to max 40vh
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'; // Reset height
-      const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.4);
+      textareaRef.current.style.height = 'auto'; 
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = window.innerHeight * 0.6; // Increased to 60% of viewport
+      const newHeight = Math.max(48, Math.min(scrollHeight, maxHeight));
       textareaRef.current.style.height = newHeight + 'px';
     }
   }, [text]);
+
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    if (historyRef.current) {
+      historyRef.current.scrollTo({
+        top: historyRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages]);
 
   const handleSend = () => {
     if (text.trim() === '' && attachments.length === 0) return;
@@ -78,18 +154,20 @@ export default function MainPad() {
     <main className="gemini-main-pad flex-col items-center">
       {/* Top Header */}
       <header className="main-header flex-row items-center justify-between w-full relative">
-        <div className="flex-row items-center gap-4">
+        <div className="header-left flex-row items-center gap-4">
           <button className="icon-btn mobile-menu-btn" onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}>
             <Menu size={24} />
           </button>
           <h2 className="header-title">Evolve GM</h2>
         </div>
+        
         {isChatting && (
           <h3 className="header-subtitle" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>
             Current Learning Session
           </h3>
         )}
-        <div className="header-profile relative">
+
+        <div className="header-profile relative ml-auto">
           <div className="avatar cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>JD</div>
           
           {showProfileModal && (
@@ -99,25 +177,25 @@ export default function MainPad() {
                  <span className="text-muted" style={{display: 'block', fontSize: '0.8rem'}}>student@evolvegm.com</span>
                </div>
                <hr className="profile-divider" />
-               <button className="profile-item">Manage Account</button>
-               <button className="profile-item">Sign Out</button>
+               <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
+               <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
             </div>
           )}
         </div>
       </header>
 
-      <div className={`center-content flex-col w-full flex-1 ${isChatting ? 'justify-end pb-8' : 'justify-center'}`}>
+      <div className={`center-content flex-col w-full flex-1 ${isChatting ? 'chat-active' : 'justify-center'}`}>
         
         {!isChatting ? (
           <div className="greeting-area">
             <h1 className="greeting-name flex-row items-center gap-2">
-              <Sparkles className="sparkle-icon" size={32} />
-              <span className="name-gradient">Hi Vijay</span>
+              <BookLogo className="sparkle-icon mr-2" size="4rem" />
+              <span className="name-gradient">Hi, {userName}</span>
             </h1>
             <h2 className="greeting-question">Where should we start?</h2>
           </div>
         ) : (
-          <div className="chat-history-container custom-scrollbar flex-col w-full mb-8">
+          <div className="chat-history-container custom-scrollbar flex-col w-full" ref={historyRef}>
             {messages.map((msg) => (
               msg.role === 'user' ? (
                 <div key={msg.id} className="chat-message user-message flex-row justify-end mb-6">
@@ -136,7 +214,7 @@ export default function MainPad() {
                 </div>
               ) : (
                 <div key={msg.id} className="chat-message ai-message flex-row gap-4 mb-4">
-                  <Sparkles className="sparkle-icon shrink-0 mt-1" size={24} />
+                  <BookLogo className="sparkle-icon shrink-0 mt-1" size="32px" />
                   <div className="message-content flex-col">
                     <p className="mb-4">{msg.text}</p>
                   </div>
@@ -216,8 +294,12 @@ export default function MainPad() {
                    <ChevronDown size={14} />
                 </div>
 
-                <button className="icon-btn action-btn mic-btn" title="Voice Input">
-                   <Mic size={20} />
+                <button 
+                  className={`icon-btn action-btn mic-btn ${isRecording ? 'recording-active' : ''}`} 
+                  title={isRecording ? 'Stop Recording' : 'Voice Input'}
+                  onClick={toggleRecording}
+                >
+                   <Mic size={20} className={isRecording ? 'pulse-animation' : ''} />
                 </button>
                 
                 <button 
@@ -237,6 +319,39 @@ export default function MainPad() {
           </p>
         </div>
       </div>
+
+      {/* Full-screen Center Modals */}
+      {activeModal && (
+        <div className="center-modal-overlay">
+          <div className="center-modal-content flex-col">
+             <div className="modal-header flex-row items-center justify-between mb-4">
+                <h2>
+                  {activeModal === 'profile' ? 'Profile Information' : 'Sign Out'}
+                </h2>
+                <button className="icon-btn" onClick={() => setActiveModal(null)}><X size={24} /></button>
+             </div>
+             <div className="modal-body flex-col gap-4">
+                {activeModal === 'profile' && (
+                  <div className="flex-col gap-3">
+                     <p><strong>Name:</strong> {userName} Student</p>
+                     <p><strong>Email:</strong> student@evolvegm.com</p>
+                     <p><strong>Role:</strong> Student</p>
+                     <p><strong>Member Since:</strong> March 2026</p>
+                  </div>
+                )}
+                {activeModal === 'signout' && (
+                  <div className="flex-col items-center justify-center gap-4 py-4 text-center">
+                     <p style={{fontSize: '1.1rem', color: 'var(--text-primary)'}}>Are you sure you want to sign out of Evolve GM?</p>
+                     <div className="flex-row gap-4 mt-4">
+                       <button className="cancel-btn" onClick={() => setActiveModal(null)}>Cancel</button>
+                       <button className="danger-btn" onClick={() => setActiveModal(null)}>Sign Out</button>
+                     </div>
+                  </div>
+                )}
+             </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

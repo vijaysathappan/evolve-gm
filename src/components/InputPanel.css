@@ -23,7 +23,7 @@
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-family: 'Outfit', sans-serif;
+  font-family: inherit;
   font-size: 1.05rem;
   line-height: 1.5;
   resize: none;
@@ -104,7 +104,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: 'Outfit';
+  font-family: inherit;
   font-weight: 600;
   cursor: not-allowed;
   transition: var(--transition-smooth);

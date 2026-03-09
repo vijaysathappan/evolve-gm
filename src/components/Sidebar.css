@@ -1,16 +1,18 @@
 .gemini-sidebar {
   height: 100vh;
   background-color: var(--bg-sidebar);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 1rem 0;
   overflow: hidden;
   position: relative;
   z-index: 10;
   white-space: nowrap;
+  border-right: 1px solid var(--border-color);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.2);
 }
 
 .gemini-sidebar.expanded {
-  width: 250px;
+  width: 270px;
 }
 
 .gemini-sidebar.collapsed {
@@ -20,6 +22,32 @@
 .sidebar-header {
   padding: 0 12px;
   margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.gemini-sidebar.expanded .sidebar-header {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.sidebar-logo-container {
+  opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gemini-sidebar.expanded .sidebar-logo-container {
+  margin-right: 8px;
+}
+
+.sidebar-title {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .menu-btn {
@@ -44,29 +72,50 @@
 }
 
 .new-chat-btn {
-  background-color: transparent;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.25) 0%, rgba(63, 43, 150, 0.45) 100%);
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-pill);
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(168, 192, 255, 0.6);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
-  padding: 0 12px;
-  gap: 12px;
+  box-shadow: 0 0 20px rgba(129, 140, 248, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.05);
+  padding: 0;
   overflow: hidden;
   white-space: nowrap;
 }
 
+.plus-icon {
+  color: #fff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.new-chat-btn:hover .plus-icon {
+  transform: rotate(90deg) scale(1.1);
+}
+
 .gemini-sidebar.expanded .new-chat-btn {
-  width: 140px;
+  width: auto;
+  min-width: 140px;
+  max-width: fit-content;
+  border-radius: 22px;
+  justify-content: flex-start;
+  padding: 0 16px;
+  margin-left: 12px;
+  margin-right: 12px;
+  gap: 12px;
 }
 
 .new-chat-btn:hover {
-  background-color: var(--bg-hover);
+  background: linear-gradient(135deg, rgba(168, 192, 255, 0.25) 0%, rgba(63, 43, 150, 0.4) 100%);
+  border-color: rgba(129, 140, 248, 0.8);
+  box-shadow: 0 0 20px rgba(129, 140, 248, 0.3);
+  transform: translateY(-1px);
 }
 
 .recent-label {
@@ -98,7 +147,7 @@
   width: 100%;
   color: var(--text-secondary);
   font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   border-radius: 0 20px 20px 0;
   margin-right: 12px;
@@ -189,17 +238,27 @@
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 999;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .settings-modal {
-  background-color: var(--bg-input);
+  background-color: rgba(20, 20, 23, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   width: 500px;
   border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header h2 {
