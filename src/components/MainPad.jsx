@@ -3,7 +3,7 @@ import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, 
 import BookLogo from './BookLogo';
 import './MainPad.css';
 
-export default function MainPad() {
+export default function MainPad({ user, onLogout }) {
   const [text, setText] = useState('');
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [thinkingMode, setThinkingMode] = useState('Fast');
@@ -15,7 +15,7 @@ export default function MainPad() {
   const [preRecordingText, setPreRecordingText] = useState('');
   const recognitionRef = useRef(null);
   
-  const userName = "Vijay";
+  const userName = user?.username || "Guest";
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const historyRef = useRef(null);
@@ -168,13 +168,15 @@ export default function MainPad() {
         )}
 
         <div className="header-profile relative ml-auto">
-          <div className="avatar cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>JD</div>
+          <div className="avatar cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
+            {user?.username?.substring(0, 2).toUpperCase() || 'JD'}
+          </div>
           
           {showProfileModal && (
             <div className="profile-dropdown shadow-lg flex-col">
                <div className="profile-header">
-                 <strong>JD Student</strong>
-                 <span className="text-muted" style={{display: 'block', fontSize: '0.8rem'}}>student@evolvegm.com</span>
+                 <strong>{user?.username}</strong>
+                 <span className="text-muted" style={{display: 'block', fontSize: '0.8rem'}}>{user?.email}</span>
                </div>
                <hr className="profile-divider" />
                <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
@@ -333,19 +335,19 @@ export default function MainPad() {
              <div className="modal-body flex-col gap-4">
                 {activeModal === 'profile' && (
                   <div className="flex-col gap-3">
-                     <p><strong>Name:</strong> {userName} Student</p>
-                     <p><strong>Email:</strong> student@evolvegm.com</p>
+                     <p><strong>Name:</strong> {user?.username}</p>
+                     <p><strong>User ID:</strong> {user?.userId}</p>
+                     <p><strong>Email:</strong> {user?.email}</p>
                      <p><strong>Role:</strong> Student</p>
-                     <p><strong>Member Since:</strong> March 2026</p>
                   </div>
                 )}
                 {activeModal === 'signout' && (
                   <div className="flex-col items-center justify-center gap-4 py-4 text-center">
                      <p style={{fontSize: '1.1rem', color: 'var(--text-primary)'}}>Are you sure you want to sign out of Evolve GM?</p>
-                     <div className="flex-row gap-4 mt-4">
-                       <button className="cancel-btn" onClick={() => setActiveModal(null)}>Cancel</button>
-                       <button className="danger-btn" onClick={() => setActiveModal(null)}>Sign Out</button>
-                     </div>
+                      <div className="flex-row gap-4 mt-4">
+                        <button className="cancel-btn" onClick={() => setActiveModal(null)}>Cancel</button>
+                        <button className="danger-btn" onClick={() => { setActiveModal(null); onLogout(); }}>Sign Out</button>
+                      </div>
                   </div>
                 )}
              </div>

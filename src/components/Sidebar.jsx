@@ -16,7 +16,7 @@ const MOCK_HISTORY = [
   { id: 10, title: 'Electrostatics Basics' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ user, onLogout }) {
   const [expanded, setExpanded] = useState(window.innerWidth > 768);
   const [showSettings, setShowSettings] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
