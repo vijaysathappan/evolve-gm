@@ -13,7 +13,7 @@ const Auth = ({ onLogin }) => {
     password: '',
     confirmPassword: '',
   });
-  
+
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [isCheckingUserId, setIsCheckingUserId] = useState(false);
@@ -27,13 +27,13 @@ const Auth = ({ onLogin }) => {
     const uIdController = new AbortController();
     const emailController = new AbortController();
     let uIdTimeout, emailTimeout;
-    
+
     if (formData.userId.length >= 3) {
       setIsCheckingUserId(true);
       uIdTimeout = setTimeout(async () => {
         try {
-          const res = await fetch(`http://127.0.0.1:5000/api/auth/check-userid/${formData.userId}`, { 
-            signal: uIdController.signal 
+          const res = await fetch(`${API_BASE_URL}/api/auth/check-userid/${formData.userId}`, {
+            signal: uIdController.signal
           });
           const data = await res.json();
           setErrors(prev => ({
@@ -51,8 +51,8 @@ const Auth = ({ onLogin }) => {
     if (formData.email.endsWith('@gmail.com') && formData.email.length > 10) {
       emailTimeout = setTimeout(async () => {
         try {
-          const res = await fetch(`http://127.0.0.1:5000/api/auth/check-email/${formData.email}`, { 
-            signal: emailController.signal 
+          const res = await fetch(`${API_BASE_URL}/api/auth/check-email/${formData.email}`, {
+            signal: emailController.signal
           });
           const data = await res.json();
           setErrors(prev => ({
@@ -64,7 +64,7 @@ const Auth = ({ onLogin }) => {
         }
       }, 800);
     }
-    
+
     return () => {
       clearTimeout(uIdTimeout);
       clearTimeout(emailTimeout);
@@ -75,20 +75,20 @@ const Auth = ({ onLogin }) => {
 
   const validateField = (name, value) => {
     let err = null;
-    
+
     if (name === 'username') {
       const parts = value.trim().split(/\s+/);
       if (parts.length < 2) {
         err = 'Enter at least First and Last name';
       }
     }
-    
+
     if (name === 'email') {
       if (!value.endsWith('@gmail.com')) {
         err = 'Must be a valid @gmail.com address';
       }
     }
-    
+
     if (name === 'password') {
       let strength = 0;
       if (value.length >= 6) strength++;
@@ -117,7 +117,7 @@ const Auth = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Final validation check
     const hasErrors = Object.values(errors).some(error => error !== null);
     if (isSignUp && hasErrors) {
@@ -137,11 +137,11 @@ const Auth = ({ onLogin }) => {
 
     try {
       const endpoint = isSignUp ? '/api/auth/signup' : '/api/auth/signin';
-      const body = isSignUp 
+      const body = isSignUp
         ? { username: formData.username, userId: formData.userId, email: formData.email, password: formData.password }
         : { userId: formData.userId, password: formData.password };
 
-      const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -168,8 +168,8 @@ const Auth = ({ onLogin }) => {
       <div className="auth-card neon-border">
         <div className="auth-header">
           <div className="title-wrapper">
-             <BookLogo size="48px" className="auth-book-logo" />
-             <h1 className="main-title">
+            <BookLogo size="48px" className="auth-book-logo" />
+            <h1 className="main-title">
               {isSignUp ? 'Initialize' : 'Authorize'} <span className="gm-text">GM</span>
             </h1>
           </div>
@@ -235,8 +235,8 @@ const Auth = ({ onLogin }) => {
                 placeholder="Password"
                 required
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="password-toggle-minimal"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex="-1"
