@@ -14,7 +14,7 @@ export default function MainPad({ user, onLogout }) {
   const [isRecording, setIsRecording] = useState(false);
   const [preRecordingText, setPreRecordingText] = useState('');
   const recognitionRef = useRef(null);
-  
+
   const userName = user?.username || "Guest";
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -33,18 +33,18 @@ export default function MainPad({ user, onLogout }) {
         for (let i = 0; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
           sessionTranscript += (i > 0 ? ' ' : '') + transcript;
-          
+
           // Add ellipsis only for the very last interim result
           if (!event.results[i].isFinal && i === event.results.length - 1) {
             sessionTranscript += '...';
           }
         }
-        
+
         // Sync with pre-existing text to avoid duplication
-        const fullText = preRecordingText 
+        const fullText = preRecordingText
           ? preRecordingText.trim() + ' ' + sessionTranscript.trim()
           : sessionTranscript.trim();
-          
+
         setText(fullText);
       };
 
@@ -81,7 +81,7 @@ export default function MainPad({ user, onLogout }) {
   // Auto-resize textarea to max 40vh
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'; 
+      textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
       const maxHeight = window.innerHeight * 0.6; // Increased to 60% of viewport
       const newHeight = Math.max(48, Math.min(scrollHeight, maxHeight));
@@ -101,7 +101,7 @@ export default function MainPad({ user, onLogout }) {
 
   const handleSend = () => {
     if (text.trim() === '' && attachments.length === 0) return;
-    
+
     const userMsg = {
       id: Date.now(),
       role: 'user',
@@ -141,7 +141,7 @@ export default function MainPad({ user, onLogout }) {
     } else {
       setAttachments(combined);
     }
-    
+
     setShowUploadMenu(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -160,7 +160,7 @@ export default function MainPad({ user, onLogout }) {
           </button>
           <h2 className="header-title">Evolve GM</h2>
         </div>
-        
+
         {isChatting && (
           <h3 className="header-subtitle" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>
             Current Learning Session
@@ -171,23 +171,23 @@ export default function MainPad({ user, onLogout }) {
           <div className="avatar cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
             {user?.username?.substring(0, 2).toUpperCase() || 'JD'}
           </div>
-          
+
           {showProfileModal && (
             <div className="profile-dropdown shadow-lg flex-col">
-               <div className="profile-header">
-                 <strong>{user?.username}</strong>
-                 <span className="text-muted" style={{display: 'block', fontSize: '0.8rem'}}>{user?.email}</span>
-               </div>
-               <hr className="profile-divider" />
-               <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
-               <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
+              <div className="profile-header">
+                <strong>{user?.username}</strong>
+                <span className="text-muted" style={{ display: 'block', fontSize: '0.8rem' }}>{user?.email}</span>
+              </div>
+              <hr className="profile-divider" />
+              <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
+              <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
             </div>
           )}
         </div>
       </header>
 
       <div className={`center-content flex-col w-full flex-1 ${isChatting ? 'chat-active' : 'justify-center'}`}>
-        
+
         {!isChatting ? (
           <div className="greeting-area">
             <h1 className="greeting-name flex-row items-center gap-2">
@@ -201,18 +201,18 @@ export default function MainPad({ user, onLogout }) {
             {messages.map((msg) => (
               msg.role === 'user' ? (
                 <div key={msg.id} className="chat-message user-message flex-row justify-end mb-6">
-                   <div className="user-bubble flex-col gap-2">
-                     {msg.text && <p>{msg.text}</p>}
-                     {msg.attachments && msg.attachments.length > 0 && (
-                        <div className="user-attachments flex-row gap-2 flex-wrap">
-                          {msg.attachments.map((att, i) => (
-                            <div key={i} className="mini-attachment-card flex-row items-center gap-2">
-                              <FileText size={14} /> <span className="truncate">{att.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                     )}
-                   </div>
+                  <div className="user-bubble flex-col gap-2">
+                    {msg.text && <p>{msg.text}</p>}
+                    {msg.attachments && msg.attachments.length > 0 && (
+                      <div className="user-attachments flex-row gap-2 flex-wrap">
+                        {msg.attachments.map((att, i) => (
+                          <div key={i} className="mini-attachment-card flex-row items-center gap-2">
+                            <FileText size={14} /> <span className="truncate">{att.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div key={msg.id} className="chat-message ai-message flex-row gap-4 mb-4">
@@ -228,17 +228,17 @@ export default function MainPad({ user, onLogout }) {
 
         <div className="chat-box-container">
           <div className={`chat-input-wrapper flex-col ${text.length > 0 || attachments.length > 0 ? 'active' : ''}`}>
-            
+
             {/* Attachments rendering area inside the input box */}
             {attachments.length > 0 && (
               <div className="attachments-row flex-row w-full gap-3 pb-3">
                 {attachments.map((att, i) => (
                   att.type === 'FILE' || att.name.endsWith('.pdf') ? (
                     <div key={i} className="attachment-card flex-col justify-center">
-                       <span className="att-name truncate">{att.name}</span>
-                       <div className="att-meta flex-row items-center gap-2 mt-1">
-                         <div className="pdf-icon-box">FILE</div> <span className="att-type">Document</span>
-                       </div>
+                      <span className="att-name truncate">{att.name}</span>
+                      <div className="att-meta flex-row items-center gap-2 mt-1">
+                        <div className="pdf-icon-box">FILE</div> <span className="att-type">Document</span>
+                      </div>
                     </div>
                   ) : (
                     <div key={i} className="attachment-image shadow-sm" style={{ backgroundImage: `url(${att.url})` }}></div>
@@ -247,7 +247,7 @@ export default function MainPad({ user, onLogout }) {
               </div>
             )}
 
-            <textarea 
+            <textarea
               ref={textareaRef}
               className="chat-textarea custom-scrollbar w-full"
               placeholder="Ask Evolve GM"
@@ -264,58 +264,58 @@ export default function MainPad({ user, onLogout }) {
 
             <div className="input-bottom-toolbar flex-row items-center justify-between w-full pt-2">
               <div className="input-toolbar-left relative flex-row items-center gap-3">
-                <button 
-                  className="icon-btn plus-btn" 
+                <button
+                  className="icon-btn plus-btn"
                   onClick={() => setShowUploadMenu(!showUploadMenu)}
                   title="Add attachment"
                 >
-                  <Plus size={22} className={showUploadMenu ? 'rotate-45 transition-transform' : 'transition-transform'}/>
+                  <Plus size={22} className={showUploadMenu ? 'rotate-45 transition-transform' : 'transition-transform'} />
                 </button>
-                
+
                 {/* Tools button removed per request */}
 
-                <input 
-                  type="file" 
-                  multiple 
-                  ref={fileInputRef} 
-                  style={{ display: 'none' }} 
-                  onChange={handleFileUpload} 
+                <input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={handleFileUpload}
                 />
 
                 {showUploadMenu && (
                   <div className="upload-popup flex-col shadow-lg">
-                    <button className="upload-item" onClick={triggerFileInput}><FileText size={18}/> Upload docs</button>
-                    <button className="upload-item" onClick={() => setShowUploadMenu(false)}><LinkIcon size={18}/> Paste links</button>
+                    <button className="upload-item" onClick={triggerFileInput}><FileText size={18} /> Upload docs</button>
+                    <button className="upload-item" onClick={() => setShowUploadMenu(false)}><LinkIcon size={18} /> Paste links</button>
                   </div>
                 )}
               </div>
 
               <div className="input-toolbar-right flex-row items-center gap-2">
                 <div className="thinking-selector flex-row items-center cursor-pointer" onClick={() => setThinkingMode(thinkingMode === 'Fast' ? 'Deep' : 'Fast')}>
-                   <span className="think-label">{thinkingMode}</span>
-                   <ChevronDown size={14} />
+                  <span className="think-label">{thinkingMode}</span>
+                  <ChevronDown size={14} />
                 </div>
 
-                <button 
-                  className={`icon-btn action-btn mic-btn ${isRecording ? 'recording-active' : ''}`} 
+                <button
+                  className={`icon-btn action-btn mic-btn ${isRecording ? 'recording-active' : ''}`}
                   title={isRecording ? 'Stop Recording' : 'Voice Input'}
                   onClick={toggleRecording}
                 >
-                   <Mic size={20} className={isRecording ? 'pulse-animation' : ''} />
+                  <Mic size={20} className={isRecording ? 'pulse-animation' : ''} />
                 </button>
-                
-                <button 
-                   className={`icon-btn action-btn send-btn ${text.length > 0 || attachments.length > 0 ? 'active' : ''}`} 
-                   title="Send Request"
-                   onClick={handleSend}
+
+                <button
+                  className={`icon-btn action-btn send-btn ${text.length > 0 || attachments.length > 0 ? 'active' : ''}`}
+                  title="Send Request"
+                  onClick={handleSend}
                 >
                   <Send size={18} />
                 </button>
               </div>
             </div>
-            
+
           </div>
-          
+
           <p className="disclaimer-text mt-4">
             Evolve GM is an AI and may make mistakes. Using Evolve GM means you agree to the <span className="underline cursor-pointer">Terms of Use</span>. See our <span className="underline cursor-pointer">Privacy Statement</span>.
           </p>
@@ -326,31 +326,31 @@ export default function MainPad({ user, onLogout }) {
       {activeModal && (
         <div className="center-modal-overlay">
           <div className="center-modal-content flex-col">
-             <div className="modal-header flex-row items-center justify-between mb-4">
-                <h2>
-                  {activeModal === 'profile' ? 'Profile Information' : 'Sign Out'}
-                </h2>
-                <button className="icon-btn" onClick={() => setActiveModal(null)}><X size={24} /></button>
-             </div>
-             <div className="modal-body flex-col gap-4">
-                {activeModal === 'profile' && (
-                  <div className="flex-col gap-3">
-                     <p><strong>Name:</strong> {user?.username}</p>
-                     <p><strong>User ID:</strong> {user?.userId}</p>
-                     <p><strong>Email:</strong> {user?.email}</p>
-                     <p><strong>Role:</strong> Student</p>
+            <div className="modal-header flex-row items-center justify-between mb-4">
+              <h2>
+                {activeModal === 'profile' ? 'Profile Information' : 'Sign Out'}
+              </h2>
+              <button className="icon-btn" onClick={() => setActiveModal(null)}><X size={24} /></button>
+            </div>
+            <div className="modal-body flex-col gap-4">
+              {activeModal === 'profile' && (
+                <div className="flex-col gap-3">
+                  <p><strong>Name:</strong> {user?.username}</p>
+                  <p><strong>User ID:</strong> {user?.userId}</p>
+                  <p><strong>Email:</strong> {user?.email}</p>
+                  <p><strong>Role:</strong> Student</p>
+                </div>
+              )}
+              {activeModal === 'signout' && (
+                <div className="flex-col items-center justify-center gap-4 py-4 text-center">
+                  <p style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>Are you sure you want to sign out of Evolve GM?</p>
+                  <div className="flex-row gap-4 mt-4">
+                    <button className="cancel-btn" onClick={() => setActiveModal(null)}>Cancel</button>
+                    <button className="danger-btn" onClick={() => { setActiveModal(null); onLogout(); }}>Sign Out</button>
                   </div>
-                )}
-                {activeModal === 'signout' && (
-                  <div className="flex-col items-center justify-center gap-4 py-4 text-center">
-                     <p style={{fontSize: '1.1rem', color: 'var(--text-primary)'}}>Are you sure you want to sign out of Evolve GM?</p>
-                      <div className="flex-row gap-4 mt-4">
-                        <button className="cancel-btn" onClick={() => setActiveModal(null)}>Cancel</button>
-                        <button className="danger-btn" onClick={() => { setActiveModal(null); onLogout(); }}>Sign Out</button>
-                      </div>
-                  </div>
-                )}
-             </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
