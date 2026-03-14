@@ -99,25 +99,56 @@ export default function MainPad({ user, onLogout }) {
     }
   }, [messages]);
 
-  const handleSend = () => {
+  // Point directly to the new Python FastAPI LLM Server
+  const LLM_API_URL = import.meta.env.VITE_LLM_API_URL || 'http://127.0.0.1:8000';
+
+  const handleSend = async () => {
     if (text.trim() === '' && attachments.length === 0) return;
 
+    const currentText = text;
     const userMsg = {
       id: Date.now(),
       role: 'user',
-      text: text,
+      text: currentText,
       attachments: [...attachments]
     };
 
-    const aiMsg = {
-      id: Date.now() + 1,
+    // Show a loading/thinking state message
+    const tempAiMsgId = Date.now() + 1;
+    const thinkingMsg = {
+      id: tempAiMsgId,
       role: 'ai',
-      text: "I am Evolve GM. I'm ready to assist you with your learning goals. Let me know what specific topic you'd like to explore next!"
+      text: '',
+      isThinking: true
     };
 
-    setMessages(prev => [...prev, userMsg, aiMsg]);
+    setMessages(prev => [...prev, userMsg, thinkingMsg]);
     setText('');
-    setAttachments([]); // Clear attachments after sending
+    setAttachments([]); 
+
+    try {
+      const response = await fetch(`${LLM_API_URL}/api/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: currentText }),
+      });
+      
+      const data = await response.json();
+      
+      // Update the temporary thinking message with the real result
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempAiMsgId 
+          ? { ...msg, text: data.text || data.error || data.detail || "I could not process that request.", isThinking: false }
+          : msg
+      ));
+    } catch (error) {
+      console.error("Query failed", error);
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempAiMsgId ? { ...msg, text: "Connection to server failed. Please try again.", isThinking: false } : msg
+      ));
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -216,9 +247,16 @@ export default function MainPad({ user, onLogout }) {
                 </div>
               ) : (
                 <div key={msg.id} className="chat-message ai-message flex-row gap-4 mb-4">
-                  <BookLogo className="sparkle-icon shrink-0 mt-1" size="32px" />
+                  {msg.isThinking ? null : <BookLogo className="sparkle-icon shrink-0 mt-1" size="32px" />}
                   <div className="message-content flex-col">
-                    <p className="mb-4">{msg.text}</p>
+                    {msg.isThinking ? (
+                      <div className="thinking-animation-logo flex-row items-center gap-3">
+                        <BookLogo size="32px" />
+                        <span className="thinking-text">I'm thinking...</span>
+                      </div>
+                    ) : (
+                      <p className="mb-4">{msg.text}</p>
+                    )}
                   </div>
                 </div>
               )
@@ -334,11 +372,26 @@ export default function MainPad({ user, onLogout }) {
             </div>
             <div className="modal-body flex-col gap-4">
               {activeModal === 'profile' && (
-                <div className="flex-col gap-3">
-                  <p><strong>Name:</strong> {user?.username}</p>
-                  <p><strong>User ID:</strong> {user?.userId}</p>
-                  <p><strong>Email:</strong> {user?.email}</p>
-                  <p><strong>Role:</strong> Student</p>
+                <div className="profile-info-grid">
+                  <div className="profile-info-row">
+                    <span className="info-label"><User size={16} /> Name</span>
+                    <span className="info-value">{user?.username}</span>
+                  </div>
+                  <div className="profile-info-row">
+                    <span className="info-label"><Sparkles size={16} /> User ID</span>
+                    <span className="info-value">{user?.userId}</span>
+                  </div>
+                  <div className="profile-info-row">
+                    <span className="info-label"><Menu size={16} /> Email</span>
+                    <span className="info-value">{user?.email}</span>
+                  </div>
+                  <div className="profile-info-row">
+                    <span className="info-label"><Settings size={16} /> Track</span>
+                    <select className="exam-select">
+                      <option value="JEE">JEE Mains/Adv.</option>
+                      <option value="NEET">NEET (UG)</option>
+                    </select>
+                  </div>
                 </div>
               )}
               {activeModal === 'signout' && (

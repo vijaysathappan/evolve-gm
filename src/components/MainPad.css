@@ -595,6 +595,68 @@
   font-weight: 500;
 }
 
+.profile-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.exam-select {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 6px 16px;
+  outline: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.exam-select:hover {
+  background-color: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.exam-select option {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  padding: 10px;
+}
+
 .mr-2 { margin-right: 8px; }
 
 .upgrade-btn {
@@ -648,4 +710,73 @@
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.2); opacity: 0.7; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* Thinking Animation (Drawing Based) */
+.thinking-animation-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.thinking-animation-logo svg {
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+  animation: logo-float 2.5s ease-in-out infinite;
+}
+
+/* Force paths to draw themselves inside the "thinking" wrapper */
+.thinking-animation-logo svg path {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: svg-draw-line 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite alternate !important;
+}
+
+.thinking-animation-logo svg circle {
+  animation: svg-pulse-circle 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite alternate !important;
+  transform-origin: center;
+}
+
+@keyframes svg-draw-line {
+  0% { 
+    stroke-dashoffset: 400; 
+    opacity: 0.1;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% { 
+    stroke-dashoffset: 0; 
+    opacity: 1;
+    filter: drop-shadow(0 0 4px var(--accent-glow));
+  }
+}
+
+@keyframes svg-pulse-circle {
+  0%, 50% { opacity: 0; transform: scale(0.2); }
+  100% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); }
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* "I'm thinking..." Text Animation */
+.thinking-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: linear-gradient(90deg, var(--text-secondary) 0%, var(--accent-brand) 50%, var(--text-secondary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thinking-text-shimmer 2.5s linear infinite;
+}
+
+@keyframes thinking-text-shimmer {
+  0% { background-position: -200% center; opacity: 0.7; }
+  50% { opacity: 1; filter: drop-shadow(0 0 2px rgba(139, 92, 246, 0.4)); }
+  100% { background-position: 200% center; opacity: 0.7; }
 }
