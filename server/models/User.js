@@ -1,78 +1,78 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
 
-const dbPath = path.resolve(__dirname, '../../database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL,
-      userId TEXT UNIQUE NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-  }
-});
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase credentials missing in .env');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default class User {
   constructor(data) {
-    this.username = data.username;
-    this.userId = data.userId;
-    this.email = data.email;
+    this.name = data.username || data.name;
+    this.user_id = data.userId || data.user_id;
+    this.email_id = data.email || data.email_id;
     this.password = data.password;
+    this.course = data.course || 'default';
   }
 
-  save() {
-    return new Promise((resolve, reject) => {
-      const query = `
-        INSERT INTO users (username, userId, email, password)
-        VALUES (?, ?, ?, ?)
-      `;
-      db.run(query, [this.username, this.userId, this.email, this.password], function(err) {
-        if (err) reject(err);
-        else resolve({ id: this.lastID, username: this.username, userId: this.userId, email: this.email });
-      });
-    });
-  }
-
-  static findOne(queryObj) {
-    return new Promise((resolve, reject) => {
-      let query = 'SELECT * FROM users WHERE ';
-      let values = [];
-      
-      if (queryObj.$or) {
-        const conditions = [];
-        queryObj.$or.forEach((condition) => {
-          const key = Object.keys(condition)[0];
-          values.push(condition[key]);
-          conditions.push(`${key} = ?`);
-        });
-        query += conditions.join(' OR ');
-      } else {
-        const ObjectKeys = Object.keys(queryObj);
-        if (ObjectKeys.length === 1) {
-          const key = ObjectKeys[0];
-          values.push(queryObj[key]);
-          query += `${key} = ?`;
-        } else {
-          resolve(null);
-          return;
+  async save() {
+    const { data, error } = await supabase
+      .from('users_data')
+      .insert([
+        { 
+          name: this.name, 
+          user_id: this.user_id, 
+          email_id: this.email_id, 
+          password: this.password,
+          course: this.course 
         }
-      }
+      ])
+      .select();
 
-      db.get(query, values, (err, row) => {
-        if (err) reject(err);
-        else resolve(row || null);
-      });
-    });
+    if (error) throw error;
+    return data[0];
+  }
+
+  static async findOne(queryObj) {
+    let query = supabase.from('users_data').select('*');
+
+    if (queryObj.$or) {
+      const orConditions = queryObj.$or.map(cond => {
+        const key = Object.keys(cond)[0];
+        const val = cond[key];
+        // Map common fields to supabase/schema fields
+        const finalKey = key === 'userId' ? 'user_id' : (key === 'email' ? 'email_id' : key);
+        return `${finalKey}.eq.${val}`;
+      }).join(',');
+      query = query.or(orConditions);
+    } else {
+      const key = Object.keys(queryObj)[0];
+      const val = queryObj[key];
+      // Map common fields to supabase/schema fields
+      const finalKey = key === 'userId' ? 'user_id' : (key === 'email' ? 'email_id' : key);
+      query = query.eq(finalKey, val);
+    }
+
+    const { data, error } = await query.single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No rows found
+      throw error;
+    }
+
+    // Map back to original fields for app compatibility
+    if (data) {
+        data.username = data.name;
+        data.userId = data.user_id;
+        data.email = data.email_id;
+    }
+    
+    return data;
   }
 }
-
