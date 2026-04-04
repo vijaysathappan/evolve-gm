@@ -14,7 +14,7 @@ async def generate_llm_response(query: str, history: list = None) -> str:
     # Dynamic retrieval to ensure production-grade env updates on Vercel
     api_key = os.getenv("OPENROUTER_API_KEY")
     # Using a 100% free model as the default to avoid credit-balance issues
-    model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.2-3b-instruct:free")
+    model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
 
     # Safe Diagnostic Info for the user
     key_diag = "MISSING"
@@ -66,7 +66,7 @@ async def generate_llm_response(query: str, history: list = None) -> str:
                 "max_tokens": 512,
                 "stream": False # Set to True for future streaming implementation
             },
-            timeout=10 # Ensure request doesn't hang long
+            timeout=4000 # Ensure request doesn't hang long
         )
         
         response.raise_for_status()
