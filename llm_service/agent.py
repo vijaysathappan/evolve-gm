@@ -15,8 +15,13 @@ async def generate_llm_response(query: str, history: list = None) -> str:
     api_key = os.getenv("OPENROUTER_API_KEY")
     model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct")
 
+    # Safe Diagnostic Info for the user
+    key_diag = "MISSING"
+    if api_key:
+        key_diag = f"{api_key[:3]}...{api_key[-3:]}"
+
     if not api_key:
-        return f"[Evolve Master Teacher]: Note: API key is not set. Responding in mock mode for '{query}'."
+        return f"Teacher System Error: OPENROUTER_API_KEY is not defined in Vercel settings (Diagnostic: {key_diag})"
 
     # 1. Build Message List
     system_prompt = (
@@ -73,4 +78,4 @@ async def generate_llm_response(query: str, history: list = None) -> str:
             
     except Exception as e:
         print(f"LLM Error: {e}")
-        return f"Teacher System Error: {str(e)}"
+        return f"Teacher System Error: {str(e)} | Key Signature: {key_diag}. (Tip: Ensure you have Redeployed on Vercel after adding keys and check for extra spaces in the key string.)"
