@@ -6,8 +6,8 @@ import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, 
 import BookLogo from './BookLogo';
 import './MainPad.css';
 
-const NODE_API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
-const LLM_API_URL = import.meta.env.VITE_LLM_API_URL || 'http://127.0.0.1:8000';
+const NODE_API_URL = import.meta.env.VITE_API_URL || '';
+const LLM_API_URL = import.meta.env.VITE_LLM_API_URL || '';
 
 export default function MainPad({ user, selectedSessionId, onLogout, userTrack }) {
   const [text, setText] = useState('');
