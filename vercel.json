@@ -2,12 +2,12 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/auth/(.*)",
-      "destination": "/api/auth.js"
-    },
-    {
       "source": "/api/query",
       "destination": "/api/query.py"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/auth.js"
     },
     {
       "source": "/(.*)",

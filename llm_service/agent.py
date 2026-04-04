@@ -6,15 +6,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Configure OpenRouter
-api_key = os.getenv("OPENROUTER_API_KEY")
-model_name = os.getenv("OPENROUTER_MODEL", "nousresearch/hermes-3-llama-3.1-405b")
-
 async def generate_llm_response(query: str, history: list = None) -> str:
     """
     Handles communication with OpenRouter LLM with 'Master Teacher: Chat Mode'.
     Provides answers in a natural conversational flow.
     """
+    # Dynamic retrieval to ensure production-grade env updates on Vercel
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct")
+
     if not api_key:
         return f"[Evolve Master Teacher]: Note: API key is not set. Responding in mock mode for '{query}'."
 
