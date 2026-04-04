@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "server/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "llm_service/main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/auth/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/api/query",
+      "destination": "/llm_service/main.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "env": {
+    "VITE_API_URL": "https://evolve-gm.vercel.app",
+    "VITE_LLM_API_URL": "https://evolve-gm.vercel.app"
+  }
+}

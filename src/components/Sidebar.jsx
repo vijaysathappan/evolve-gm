@@ -1,45 +1,132 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Plus, MessageSquare, Settings, HelpCircle, X, Shield, Lock, FileText, Share2, Trash2, CreditCard } from 'lucide-react';
+import { Menu, Plus, MessageSquare, Settings, HelpCircle, X, Shield, Lock, FileText, Share2, Trash2, CreditCard, Pencil, ChevronDown } from 'lucide-react';
 import BookLogo from './BookLogo';
 import './Sidebar.css';
 
-const MOCK_HISTORY = [
-  { id: 1, title: 'Website Update LinkedIn Post Options' },
-  { id: 2, title: 'Resume Skills Optimization For AI' },
-  { id: 3, title: 'Functional Programming\'s Core Focus' },
-  { id: 4, title: 'Calculus Integration Tricks' },
-  { id: 5, title: 'Thermodynamics Laws Explained' },
-  { id: 6, title: 'Organic Chemistry Reactions' },
-  { id: 7, title: 'NEET Physics Mock Test' },
-  { id: 8, title: 'Genetics and Evolution' },
-  { id: 9, title: 'Kinematics Formulas' },
-  { id: 10, title: 'Electrostatics Basics' },
-];
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
-export default function Sidebar({ user, onLogout }) {
+export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogout, userTrack, setUserTrack }) {
   const [expanded, setExpanded] = useState(window.innerWidth > 768);
   const [showSettings, setShowSettings] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
-  const [history, setHistory] = useState(MOCK_HISTORY);
+  const [history, setHistory] = useState([]);
+  const [showPlanOptions, setShowPlanOptions] = useState(false);
 
   const toggleSidebar = () => setExpanded(!expanded);
 
+  const fetchHistory = async () => {
+    if (!user?.id) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/chat/list/${user.id}`);
+      const data = await resp.json();
+      if (data.chats) {
+          setHistory(data.chats);
+      }
+    } catch (err) {
+      console.error('Failed to fetch sidebar history', err);
+    }
+  };
+
   useEffect(() => {
+    fetchHistory();
     const handleToggle = () => setExpanded(prev => !prev);
     window.addEventListener('toggleSidebar', handleToggle);
-    return () => window.removeEventListener('toggleSidebar', handleToggle);
-  }, []);
+    window.addEventListener('refreshChatList', fetchHistory); // Global refresh trigger
+    return () => {
+        window.removeEventListener('toggleSidebar', handleToggle);
+        window.removeEventListener('refreshChatList', fetchHistory);
+    };
+  }, [user?.id]);
 
-  const displayedHistory = showAllHistory ? history : history.slice(0, 3);
+  const [editingId, setEditingId] = useState(null);
+  const [newTitle, setNewTitle] = useState('');
+
+  const handleRename = async (id, oldTitle) => {
+    if (editingId === id) {
+        // Save state
+        const sanitizedTitle = newTitle.trim();
+        if (!sanitizedTitle || sanitizedTitle === oldTitle) {
+            setEditingId(null);
+            return;
+        }
+
+        console.log(`[SIDEBAR] Renaming session ${id} to "${sanitizedTitle}"`);
+
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/chat/rename`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: id, title: sanitizedTitle })
+            });
+
+            if (resp.ok) {
+                console.log('[SIDEBAR] Rename successful');
+                await fetchHistory(); // Wait for actual data refresh from DB
+            } else {
+                const errData = await resp.json();
+                console.error('[SIDEBAR] Rename failed backend:', errData.error);
+                alert(`Rename failed: ${errData.error || 'Server error'}`);
+            }
+        } catch (err) {
+            console.error('[SIDEBAR] Renaming error:', err);
+            alert('Could not reach server to rename chat.');
+        }
+        setEditingId(null);
+    } else {
+        // Start editing state
+        setEditingId(id);
+        setNewTitle(oldTitle);
+    }
+  };
+
+  const displayedHistory = showAllHistory ? history : history.slice(0, 10);
+
+  const [deletingId, setDeletingId] = useState(null);
+
+  const confirmDelete = async () => {
+    if (!deletingId) return;
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/chat/${deletingId}`, {
+            method: 'DELETE'
+        });
+        
+        if (resp.ok) {
+            if (selectedSessionId === deletingId) {
+                onSelectChat(null);
+            }
+            await fetchHistory();
+        } else {
+            alert("Failed to delete the conversation from the server.");
+        }
+    } catch (err) {
+        console.error('Delete error:', err);
+        alert("Operation failed. Could not reach server to delete chat.");
+    } finally {
+        setDeletingId(null);
+    }
+  };
 
   const deleteChat = (e, id) => {
     e.stopPropagation();
-    setHistory(history.filter(item => item.id !== id));
+    setDeletingId(id);
   };
 
-  const shareChat = (e, id) => {
-    e.stopPropagation();
-    alert('Share dialog opened for chat ID: ' + id);
+  const handleNewChat = async () => {
+    try {
+        const resp = await fetch(`${API_BASE_URL}/api/chat/new`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id })
+        });
+        const data = await resp.json();
+        if (data.chat) {
+            // Important: resetting the selected session to the brand new one
+            onSelectChat(data.chat.id || data.chat.chat_id);
+            fetchHistory();
+        }
+    } catch (err) {
+        console.error('Failed to start new chat', err);
+    }
   };
 
   return (
@@ -61,7 +148,7 @@ export default function Sidebar({ user, onLogout }) {
           </div>
 
           <div className="new-chat-wrapper">
-            <button className="new-chat-btn" title="New Chat">
+            <button className="new-chat-btn" title="New Chat" onClick={handleNewChat}>
               <Plus size={20} className="plus-icon" />
               <span className="nav-label">New chat</span>
             </button>
@@ -72,20 +159,37 @@ export default function Sidebar({ user, onLogout }) {
              
              {/* Chat History items */}
              {displayedHistory.map((chat) => (
-               <div key={chat.id} className="nav-item history-item" title={chat.title}>
-                 <div className="history-content flex-row items-center">
+               <div 
+                  key={chat.id} 
+                  className={`nav-item history-item ${selectedSessionId === chat.session_id ? 'active' : ''}`} 
+                  title={chat.title} 
+                  onClick={() => editingId !== chat.id && onSelectChat(chat.session_id)}
+                >
+                 <div className="history-content flex-row items-center w-full">
                    <MessageSquare size={18} strokeWidth={1.5} className="history-icon" />
-                   <span className="nav-label truncate">{chat.title}</span>
+                   {editingId === chat.id ? (
+                       <input 
+                         className="rename-input" 
+                         value={newTitle}
+                         autoFocus
+                         onChange={(e) => setNewTitle(e.target.value)}
+                         onKeyDown={(e) => e.key === 'Enter' && handleRename(chat.id, chat.title)}
+                         onBlur={() => handleRename(chat.id, chat.title)}
+                         onClick={(e) => e.stopPropagation()}
+                       />
+                   ) : (
+                       <span className="nav-label truncate">{chat.title}</span>
+                   )}
                  </div>
                  
-                 {expanded && (
+                 {expanded && editingId !== chat.id && (
                    <div className="history-actions flex-row items-center">
-                     <button className="context-btn" onClick={(e) => shareChat(e, chat.id)} title="Share session">
-                       <Share2 size={14} />
-                     </button>
-                     <button className="context-btn" onClick={(e) => deleteChat(e, chat.id)} title="Delete session">
-                       <Trash2 size={14} />
-                     </button>
+                      <button className="context-btn" onClick={(e) => { e.stopPropagation(); handleRename(chat.id, chat.title); }} title="Rename session">
+                        <Pencil size={14} />
+                      </button>
+                      <button className="context-btn" onClick={(e) => deleteChat(e, chat.id)} title="Delete session">
+                        <Trash2 size={14} />
+                      </button>
                    </div>
                  )}
                </div>
@@ -119,12 +223,42 @@ export default function Sidebar({ user, onLogout }) {
                 <button className="icon-btn" onClick={() => setShowSettings(false)}><X size={24} /></button>
              </div>
              <div className="modal-body flex-col gap-4">
-                <div className="setting-card flex-row items-center">
-                  <CreditCard size={24} className="setting-icon"/>
-                  <div className="flex-col">
-                    <span className="setting-title">Subscription Plan</span>
-                    <span className="setting-desc">You are currently on the <strong>Evolve GM Free</strong> plan. Upgrade to unlock deeper thinking limits.</span>
+                <div className="setting-card flex-col">
+                  <div 
+                    className="flex-row items-center justify-between w-full cursor-pointer"
+                    onClick={() => setShowPlanOptions(!showPlanOptions)}
+                  >
+                    <div className="flex-row items-center gap-3">
+                      <CreditCard size={24} className="setting-icon"/>
+                      <span className="setting-title">Subscription Plan</span>
+                    </div>
+                    <ChevronDown size={18} style={{ transform: showPlanOptions ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
                   </div>
+                  
+                  {showPlanOptions && (
+                    <div className="plan-grid mt-4 animate-fadeIn">
+                      <div className={`plan-item ${userTrack === 'JEE' ? 'active' : ''}`} onClick={() => setUserTrack('JEE')}>
+                        <div className="plan-name">JEE (Free)</div>
+                        <div className="plan-price">Included</div>
+                        <div className="plan-tokens">10k tokens /mo</div>
+                      </div>
+                      <div className={`plan-item ${userTrack === 'NEET' ? 'active' : ''}`} onClick={() => setUserTrack('NEET')}>
+                        <div className="plan-name">NEET (Free)</div>
+                        <div className="plan-price">Included</div>
+                        <div className="plan-tokens">10k tokens /mo</div>
+                      </div>
+                      <div className={`plan-item pro-gradient ${userTrack === 'JEE' ? 'active' : ''}`} onClick={() => setUserTrack('JEE')}>
+                        <div className="plan-name">JEE (Pro)</div>
+                        <div className="plan-price">$15 /mo</div>
+                        <div className="plan-tokens">5M tokens /mo</div>
+                      </div>
+                      <div className={`plan-item pro-gradient ${userTrack === 'NEET' ? 'active' : ''}`} onClick={() => setUserTrack('NEET')}>
+                        <div className="plan-name">NEET (Pro)</div>
+                        <div className="plan-price">$20 /mo</div>
+                        <div className="plan-tokens">5M tokens /mo</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="setting-card flex-row items-center">
                   <Shield size={24} className="setting-icon"/>
@@ -147,6 +281,34 @@ export default function Sidebar({ user, onLogout }) {
                     <span className="setting-desc">Review the terms regarding the usage of this platform.</span>
                   </div>
                 </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Simple & Clean Delete Confirmation Modal */}
+      {deletingId && (
+        <div className="modal-overlay flex-row items-center justify-center">
+          <div className="settings-modal flex-col" style={{ width: '320px', padding: '24px', textAlign: 'center' }}>
+             <h2 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Delete chat?</h2>
+             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                This will permanently delete this conversation.
+             </p>
+             <div className="flex-row gap-3" style={{ justifyContent: 'center' }}>
+                <button 
+                  className="cancel-btn" 
+                  onClick={() => setDeletingId(null)}
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px' }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="danger-btn" 
+                  onClick={confirmDelete}
+                  style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#ef4444' }}
+                >
+                  Delete
+                </button>
              </div>
           </div>
         </div>

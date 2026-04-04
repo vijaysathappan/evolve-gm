@@ -13,6 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default class User {
+  static supabase = supabase;
   constructor(data) {
     this.name = data.username || data.name;
     this.user_id = data.userId || data.user_id;
@@ -73,6 +74,29 @@ export default class User {
         data.email = data.email_id;
     }
     
+    return data;
+  }
+
+  static async updateLastLogin(id) {
+    const { error } = await supabase
+      .from('users_data')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) console.error('Error updating last_login:', error);
+  }
+
+  static async createChatSession(userId) {
+    const { data, error } = await supabase
+      .from('chat_data')
+      .insert([{ user_id: userId }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating chat session:', error);
+      throw error;
+    }
     return data;
   }
 }
