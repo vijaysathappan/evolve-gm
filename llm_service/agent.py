@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 async def generate_llm_response(query: str, history: list = None) -> str:
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    model_name = os.getenv("OPENROUTER_MODEL", "nousresearch/hermes-3-llama-3.1-405b:free")
+    api_key = "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"
+    model_name = "nousresearch/hermes-3-llama-3.1-405b:free"
 
     if not api_key:
         return "API key missing."
