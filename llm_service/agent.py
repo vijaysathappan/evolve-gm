@@ -4,15 +4,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def generate_llm_response(query: str, history: list = None) -> str:
+async def generate_llm_response(query: str, history: list = None) -> str:
+    # Ensure this is set in Vercel settings!
     api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
-        return "API key missing."
+        return "Teacher System Error: GEMINI_API_KEY missing."
 
     genai.configure(api_key=api_key)
 
-    # ✅ Lite + fast model
+    # ✅ FIXED: Valid, existing high-speed model
     model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
 
     system_prompt = (
@@ -21,7 +22,6 @@ def generate_llm_response(query: str, history: list = None) -> str:
     )
 
     chat_history = []
-
     if history:
         for entry in history[-4:]:
             if "query" in entry and "response" in entry:
@@ -31,15 +31,17 @@ def generate_llm_response(query: str, history: list = None) -> str:
     try:
         chat = model.start_chat(history=chat_history)
 
+        prompt_with_persona = f"{system_prompt}\n\nUser Question: {query}"
+        
         response = chat.send_message(
-            system_prompt + "\nUser: " + query,
+            prompt_with_persona,
             generation_config={
-                "temperature": 0,
-                "max_output_tokens": 120
+                "temperature": 0.5,
+                "max_output_tokens": 150
             }
         )
 
         return response.text
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Teacher System Error (Gemini): {str(e)}"
