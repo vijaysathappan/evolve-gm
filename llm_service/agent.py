@@ -13,7 +13,8 @@ async def generate_llm_response(query: str, history: list = None) -> str:
     """
     # Dynamic retrieval to ensure production-grade env updates on Vercel
     api_key = os.getenv("OPENROUTER_API_KEY")
-    model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct")
+    # Using a 100% free model as the default to avoid credit-balance issues
+    model_name = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.2-3b-instruct:free")
 
     # Safe Diagnostic Info for the user
     key_diag = "MISSING"
