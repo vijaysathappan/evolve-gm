@@ -1,17 +1,13 @@
 {
   "version": 2,
-  "functions": {
-    "server/server.js": { "runtime": "@vercel/node" },
-    "llm_service/main.py": { "runtime": "@vercel/python" }
-  },
   "rewrites": [
     {
       "source": "/api/auth/(.*)",
-      "destination": "/server/server.js"
+      "destination": "/api/auth.js"
     },
     {
       "source": "/api/query",
-      "destination": "/llm_service/main.py"
+      "destination": "/api/query.py"
     },
     {
       "source": "/(.*)",
