@@ -3,7 +3,7 @@ import { Menu, Plus, MessageSquare, Settings, HelpCircle, X, Shield, Lock, FileT
 import BookLogo from './BookLogo';
 import './Sidebar.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogout, userTrack, setUserTrack }) {
   const [expanded, setExpanded] = useState(window.innerWidth > 768);
