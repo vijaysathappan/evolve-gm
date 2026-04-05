@@ -2,12 +2,38 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, Sparkles, ChevronDown, AlignLeft, X, User, Settings, LogOut, Loader2 } from 'lucide-react';
+import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, Sparkles, ChevronDown, AlignLeft, X, User, Settings, LogOut, Loader2, Globe, BookOpen, Paperclip, RotateCw } from 'lucide-react';
 import BookLogo from './BookLogo';
 import './MainPad.css';
 
 const NODE_API_URL = import.meta.env.VITE_API_URL || '';
 const LLM_API_URL = import.meta.env.VITE_LLM_API_URL || '';
+
+const Typewriter = ({ text, speed = 8, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (index < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText((prev) => prev + text[index]);
+        setIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [index, text, speed, onComplete]);
+
+  return (
+    <div className="ai-response-text formatted-text relative">
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+        {displayedText}
+      </ReactMarkdown>
+      {index < text.length && <span className="typing-cursor"></span>}
+    </div>
+  );
+};
 
 export default function MainPad({ user, selectedSessionId, onLogout, userTrack }) {
   const [text, setText] = useState('');
@@ -100,6 +126,34 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
       setIsRecording(true);
     }
   };
+
+  const [usage, setUsage] = useState(1);
+  const [animatedUsage, setAnimatedUsage] = useState(0);
+
+  const animateUsage = (target) => {
+    let start = 0;
+    const duration = 1000;
+    const startTime = performance.now();
+
+    const update = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = Math.floor(progress * target);
+      setAnimatedUsage(current);
+      if (progress < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+  };
+
+  const getUsageColor = (val) => {
+    if (val < 50) return '#10b981';
+    if (val < 80) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  useEffect(() => {
+    animateUsage(usage);
+  }, []);
 
   // Load chat history when session changes
   useEffect(() => {
@@ -197,7 +251,7 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
 
       setMessages(prev => prev.map(msg => 
         msg.id === tempAiMsgId 
-          ? { ...msg, text: aiAnswer, isThinking: false }
+          ? { ...msg, text: aiAnswer, isThinking: false, isNew: true }
           : msg
       ));
 
@@ -246,23 +300,35 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
     <main className="gemini-main-pad flex-col items-center">
       <header className="main-header flex-row items-center justify-between w-full relative">
         <div className="header-left flex-row items-center gap-4">
-          <button className="icon-btn mobile-menu-btn" onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}>
+          <button 
+             className="icon-btn mobile-menu-btn" 
+             onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
+          >
             <Menu size={24} />
           </button>
-          <h2 className="header-title">Evolve GM</h2>
-          <div className="learning-badge">
-            <Sparkles size={12} />
-            Learning Focus
-          </div>
         </div>
 
+        <div className="header-right flex-row items-center gap-8">
+           <div 
+             className="intelligent-usage-pill flex-row items-center cursor-pointer"
+             onClick={() => animateUsage(usage)}
+             title="Reload usage data"
+           >
+              <div className="pct-section flex-row items-center gap-2">
+                <span className="usage-pct-small" style={{ color: getUsageColor(animatedUsage) }}>
+                   {animatedUsage}%<span className="hide-mobile"> consumed</span>
+                </span>
+                <div className="token-reload-btn flex-row items-center hide-mobile">
+                  <RotateCw size={12} />
+                </div>
+              </div>
+           </div>
 
-        <div className="header-profile relative ml-auto">
-          <div className="avatar cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
-            {user?.username?.substring(0, 2).toUpperCase() || 'JD'}
-          </div>
+           <div className="avatar profile-avatar-large cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
+              {userName.substring(0, 2).toUpperCase()}
+           </div>
 
-          {showProfileModal && (
+           {showProfileModal && (
             <div className="profile-dropdown shadow-lg flex-col">
               <div className="profile-header">
                 <strong>{user?.username}</strong>
@@ -272,7 +338,7 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
               <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
               <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
             </div>
-          )}
+           )}
         </div>
       </header>
 
@@ -308,19 +374,40 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
                     </div>
                   ) : (
                     <div key={msg.id} className="chat-message ai-message flex-row gap-4 mb-4">
-                      {msg.isThinking ? null : <BookLogo className="sparkle-icon shrink-0 mt-1" size="32px" />}
+                      {msg.isThinking ? null : <BookLogo className="shrink-0 mt-1" size="24px" />}
                       <div className="message-content flex-col">
                         {msg.isThinking ? (
-                          <div className="thinking-animation-logo flex-row items-center gap-3">
-                            <BookLogo size="32px" />
-                            <span className="thinking-text">Thinking...</span>
+                          <div className="thinking-animation-container flex-col items-center gap-2">
+                             <div className="dna-loader">
+                                {[...Array(12)].map((_, i) => (
+                                  <div key={i} className="dna-strand" style={{ '--i': i }}>
+                                    <div className="dna-dot dot-1"></div>
+                                    <div className="dna-line"></div>
+                                    <div className="dna-dot dot-2"></div>
+                                  </div>
+                                ))}
+                             </div>
+                             <span className="thinking-text">Sequencing Response...</span>
                           </div>
                          ) : (
-                          <div className="ai-response-text formatted-text">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                {msg.text}
-                              </ReactMarkdown>
-                          </div>
+                           <div className="ai-response-text-wrapper">
+                             {msg.isNew ? (
+                               <Typewriter 
+                                 text={msg.text} 
+                                 speed={10} 
+                                 onComplete={() => {
+                                   // Mark as not new after typing finishes to prevent re-typing
+                                   setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, isNew: false } : m));
+                                 }}
+                               />
+                             ) : (
+                               <div className="ai-response-text formatted-text">
+                                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                   {msg.text}
+                                 </ReactMarkdown>
+                               </div>
+                             )}
+                           </div>
                         )}
                       </div>
                     </div>
@@ -347,58 +434,61 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
               ))}
             </div>
           )}
-          <div className={`chat-input-wrapper flex-row items-center gap-2 ${(text.length > 0 || attachments.length > 0) ? 'active' : ''}`}>
-             <button
-                className="icon-btn plus-btn"
-                onClick={() => setShowUploadMenu(!showUploadMenu)}
-              >
-                <Plus size={20} className={showUploadMenu ? 'rotate-45 transition-transform' : 'transition-transform'} />
-              </button>
+          <div className={`chat-input-wrapper flex-col ${(text.length > 0 || attachments.length > 0) ? 'active' : ''}`}>
+             <textarea
+               ref={textareaRef}
+               className="chat-textarea custom-scrollbar w-full"
+               placeholder="Ask anything"
+               rows={1}
+               value={text}
+               onChange={(e) => setText(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter' && !e.shiftKey) {
+                   e.preventDefault();
+                   handleSend();
+                 }
+               }}
+             />
 
-              <input
-                type="file"
-                multiple
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={handleFileUpload}
-              />
+            <div className="input-footer flex-row items-center justify-between w-full mt-2">
+              <div className="input-left-tools flex-row items-center gap-2">
+                 <button className="icon-btn-sm tool-btn" onClick={triggerFileInput} title="Upload docs">
+                    <Paperclip size={18} />
+                 </button>
+                 <button className="icon-btn-sm tool-btn" title="Academic sources">
+                    <BookOpen size={18} />
+                 </button>
+                 <button className="icon-btn-sm tool-btn" onClick={triggerFileInput} title="Add images">
+                    <ImageIcon size={18} />
+                 </button>
 
-              {showUploadMenu && (
-                <div className="upload-popup flex-col shadow-lg">
-                  <button className="upload-item" onClick={triggerFileInput}><FileText size={18} /> Upload docs</button>
-                  <button className="upload-item" onClick={() => setShowUploadMenu(false)}><LinkIcon size={18} /> Paste links</button>
-                </div>
-              )}
+                 <input
+                   type="file"
+                   multiple
+                   ref={fileInputRef}
+                   style={{ display: 'none' }}
+                   onChange={handleFileUpload}
+                 />
+              </div>
 
-            <textarea
-              ref={textareaRef}
-              className="chat-textarea custom-scrollbar flex-1"
-              placeholder="Ask anything"
-              rows={1}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
+              <div className="input-right-tools flex-row items-center gap-3">
+                <button
+                  className={`voice-pill-btn ${isRecording ? 'recording-active' : ''}`}
+                  onClick={toggleRecording}
+                >
+                  <div className="waveform-icon">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <span className="voice-text">Voice</span>
+                </button>
 
-            <div className="input-right-actions flex-row items-center gap-2">
-              <button
-                className={`icon-btn mic-btn ${isRecording ? 'recording-active' : ''}`}
-                onClick={toggleRecording}
-              >
-                <Mic size={18} />
-              </button>
-
-              <button
-                className={`send-pill-btn ${(text.length > 0 || attachments.length > 0) ? 'active' : ''}`}
-                onClick={handleSend}
-              >
-                <Send size={16} />
-              </button>
+                <button
+                  className={`send-circle-btn ${(text.length > 0 || attachments.length > 0) ? 'active' : ''}`}
+                  onClick={handleSend}
+                >
+                  <Send size={16} />
+                </button>
+              </div>
             </div>
           </div>
 

@@ -169,13 +169,13 @@ const Auth = ({ onLogin }) => {
     <div className="auth-container">
       <div className="auth-card neon-border">
         <div className="auth-header">
-          <div className="title-wrapper">
-            <BookLogo size="48px" className="auth-book-logo" />
+          <div className="title-wrapper gap-3">
+            <BookLogo size="42px" className="auth-book-logo" />
             <h1 className="main-title">
-              {isSignUp ? 'Initialize' : 'Authorize'} <span className="gm-text">GM</span>
+              {isSignUp ? 'Join' : 'Authorize'} Evolve <span className="gm-bold">GM</span>
             </h1>
           </div>
-          <p className="auth-subtitle">{isSignUp ? 'Sequence your cognitive profile' : 'Reconnect to the GM nexus'}</p>
+          <p className="auth-subtitle">{isSignUp ? 'Create your educational profile' : 'Sign in to your learning dashboard'}</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
