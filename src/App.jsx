@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import MainPad from './components/MainPad';
 import Auth from './pages/Auth';
+import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 
 function App() {
@@ -26,7 +27,12 @@ function App() {
   };
 
   if (!user) {
-    return <Auth onLogin={handleLogin} />;
+    return (
+      <>
+        <Auth onLogin={handleLogin} />
+        <Analytics />
+      </>
+    );
   }
 
   return (
@@ -47,6 +53,7 @@ function App() {
             onLogout={handleLogout} 
         />
       </div>
+      <Analytics />
     </>
   );
 }
