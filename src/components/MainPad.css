@@ -77,19 +77,15 @@
   }
 }
 .main-header {
-  padding: 1rem 1.5rem;
+  padding: 12px 24px;
   height: 64px;
   display: flex;
   align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   z-index: 50;
   width: 100%;
-  background: var(--bg-sidebar);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: transparent;
+  transition: all 0.4s ease;
 }
 
 .header-title {
@@ -103,11 +99,14 @@
 
 .header-title .gm-bold {
   font-weight: 800;
-  margin-left: 4px;
-  background: linear-gradient(135deg, var(--accent-brand), var(--accent-orange));
+  margin-left: 6px;
+  background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808, #FF9933);
+  background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: energyFlow 6s linear infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 153, 51, 0.2));
 }
 
 .header-subtitle {
@@ -221,9 +220,9 @@
   flex: 1;
   width: 100%;
   padding: 24px 0;
-  margin-top: 64px;
   display: flex;
   flex-direction: column;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .chat-active {
@@ -270,20 +269,35 @@
 }
 
 .user-bubble {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  padding: 12px 20px;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 22px;
+  border-radius: 18px;
   max-width: fit-content;
-  color: var(--text-primary);
-  font-size: 1rem;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
   margin-left: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .ai-response-text {
   max-width: 100%;
   position: relative;
   line-height: 1.7;
+  transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  overflow: hidden;
+}
+
+.collapsed-text {
+  max-height: 280px; /* Roughly 5-6 lines */
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.expanded-text {
+  max-height: 4000px;
 }
 
 .ai-response-text h1, 
@@ -301,9 +315,10 @@
 
 .ai-response-text p {
   margin-bottom: 1.5rem;
-  color: #ffffff;
-  font-size: 1.15rem;
-  line-height: 1.75;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  font-weight: 400;
 }
 
 .ai-response-text p {
@@ -336,12 +351,13 @@
 }
 
 .ai-response-text code {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  border-radius: 6px;
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
   font-size: 0.9em;
   color: var(--accent-brand);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .ai-response-text mark {
@@ -417,6 +433,33 @@
   max-width: 200px;
 }
 
+.expand-toggle-btn {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-brand);
+  opacity: 0.8;
+  padding: 6px 0;
+  transition: all 0.3s ease;
+  width: fit-content;
+}
+
+.expand-toggle-btn:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.expand-toggle-btn .rotated {
+  transform: rotate(180deg);
+}
+
+.dot-divider {
+  width: 20px;
+  height: 1px;
+  background: var(--border-color);
+  margin-right: 4px;
+}
+
 .chat-box-container {
   width: 100%;
   padding: 24px 0;
@@ -473,6 +516,8 @@
   border-radius: var(--radius-md);
   padding: 10px 12px;
   border: 1px solid var(--border-color);
+  position: relative;
+  overflow: visible;
 }
 
 .ai-response-text-wrapper {
@@ -515,12 +560,46 @@
 }
 
 .attachment-image {
-  width: 60px;
-  height: 60px;
+  width: 68px;
+  height: 68px;
   border-radius: var(--radius-md);
   background-size: cover;
   background-position: center;
   border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.remove-att-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.remove-att-btn:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  transform: scale(1.1);
+}
+
+.remove-att-btn.img-ver {
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
 }
 
 .input-footer {

@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, Sparkles, ChevronDown, AlignLeft, X, User, Settings, LogOut, Loader2, Globe, BookOpen, Paperclip, RotateCw } from 'lucide-react';
 import './MainPad.css';
+import GMLogo from './GMLogo';
 
 const NODE_API_URL = import.meta.env.VITE_API_URL || '';
 const LLM_API_URL = import.meta.env.VITE_LLM_API_URL || '';
@@ -45,7 +46,12 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
   const [activeModal, setActiveModal] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [preRecordingText, setPreRecordingText] = useState('');
+  const [expandedMessages, setExpandedMessages] = useState({});
   const recognitionRef = useRef(null);
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
 
   const userName = user?.username || "Guest";
   const textareaRef = useRef(null);
@@ -129,8 +135,7 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
   const [usage, setUsage] = useState(1);
   const [animatedUsage, setAnimatedUsage] = useState(0);
 
-  const animateUsage = (target) => {
-    let start = 0;
+  const animateUsage = React.useCallback((target) => {
     const duration = 1000;
     const startTime = performance.now();
 
@@ -142,7 +147,7 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
       if (progress < 1) requestAnimationFrame(update);
     };
     requestAnimationFrame(update);
-  };
+  }, []);
 
   const getUsageColor = (val) => {
     if (val < 50) return '#10b981';
@@ -152,7 +157,7 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
 
   useEffect(() => {
     animateUsage(usage);
-  }, []);
+  }, [usage, animateUsage]);
 
   // Load chat history when session changes
   useEffect(() => {
@@ -322,25 +327,6 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
                 </div>
               </div>
            </div>
-
-           {/* Avatar — hidden on mobile, shown on desktop only */}
-           <div className="avatar-desktop-only">
-             <div className="avatar profile-avatar-large cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
-                {userName.substring(0, 2).toUpperCase()}
-             </div>
-
-             {showProfileModal && (
-              <div className="profile-dropdown shadow-lg flex-col">
-                <div className="profile-header">
-                  <strong>{user?.username}</strong>
-                  <span className="text-muted" style={{ display: 'block', fontSize: '0.8rem' }}>{user?.email}</span>
-                </div>
-                <hr className="profile-divider" />
-                <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
-                <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
-              </div>
-             )}
-           </div>
         </div>
       </header>
 
@@ -353,9 +339,26 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
         ) : (
           <div className="chat-history-container custom-scrollbar flex-col w-full" ref={historyRef}>
             {isLoadingHistory ? (
-                <div className="flex-col items-center justify-center flex-1 h-full opacity-50">
-                    <Loader2 className="animate-spin mb-2" size={32} />
-                    <span>Loading your conversation...</span>
+                <div className="history-skeleton-container flex-col w-full">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="skeleton-group flex-col gap-4 mb-8">
+                       <div className="skeleton-bubble user shimmer"></div>
+                       <div className="skeleton-bubble ai shimmer"></div>
+                       <div className="skeleton-line shimmer" style={{ width: '60%' }}></div>
+                    </div>
+                  ))}
+                  <div className="skeleton-status-text flex-col items-center justify-center">
+                    <div className="gm-core-loader mb-4">
+                       <GMLogo size={32} />
+                       <div className="orbital-ring"></div>
+                       <div className="orbital-dots">
+                          {[...Array(3)].map((_, i) => (
+                            <div key={i} className="orbital-dot" style={{ '--i': i }}></div>
+                          ))}
+                       </div>
+                    </div>
+                    <span className="sequencing-text">Synchronizing GM Core...</span>
+                  </div>
                 </div>
             ) : (
                 messages.map((msg) => (
@@ -376,7 +379,7 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
                     </div>
                   ) : (
                     <div key={msg.id} className="chat-message ai-message flex-row gap-4 mb-4">
-                      <div className="message-content flex-col">
+                      <div className="message-content flex-col w-full">
                         {msg.isThinking ? (
                           <div className="thinking-animation-container flex-col items-center gap-2">
                              <div className="dna-loader">
@@ -391,22 +394,34 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
                              <span className="thinking-text">Sequencing Response...</span>
                           </div>
                          ) : (
-                           <div className="ai-response-text-wrapper">
+                           <div className="ai-response-text-wrapper relative">
                              {msg.isNew ? (
                                <Typewriter 
                                  text={msg.text} 
                                  speed={10} 
                                  onComplete={() => {
-                                   // Mark as not new after typing finishes to prevent re-typing
                                    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, isNew: false } : m));
                                  }}
                                />
                              ) : (
-                               <div className="ai-response-text formatted-text">
-                                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                   {msg.text}
-                                 </ReactMarkdown>
-                               </div>
+                               <>
+                                 <div className={`ai-response-text formatted-text ${(!expandedMessages[msg.id] && msg.text.length > 450) ? 'collapsed-text' : 'expanded-text'}`}>
+                                   <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                     {msg.text}
+                                   </ReactMarkdown>
+                                 </div>
+                                 
+                                 {msg.text.length > 450 && (
+                                   <button 
+                                     className="expand-toggle-btn flex-row items-center gap-2"
+                                     onClick={() => setExpandedMessages(prev => ({ ...prev, [msg.id]: !prev[msg.id] }))}
+                                   >
+                                     <div className="dot-divider"></div>
+                                     <span>{expandedMessages[msg.id] ? 'Show less' : 'Read full response'}</span>
+                                     <ChevronDown size={14} className={expandedMessages[msg.id] ? 'rotated' : ''} />
+                                   </button>
+                                 )}
+                               </>
                              )}
                            </div>
                         )}
@@ -423,14 +438,23 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
             <div className="attachments-row flex-row w-full gap-3 pb-3">
               {attachments.map((att, i) => (
                 att.type === 'FILE' || att.name.endsWith('.pdf') ? (
-                  <div key={i} className="attachment-card flex-col justify-center">
-                    <span className="att-name truncate">{att.name}</span>
-                    <div className="att-meta flex-row items-center gap-2 mt-1">
-                      <div className="pdf-icon-box">FILE</div> <span className="att-type">Document</span>
+                  <div key={i} className="attachment-card flex-row items-center relative">
+                    <div className="flex-col flex-1 truncate">
+                      <span className="att-name truncate">{att.name}</span>
+                      <div className="att-meta flex-row items-center gap-2 mt-1">
+                        <div className="pdf-icon-box">FILE</div> <span className="att-type">Document</span>
+                      </div>
                     </div>
+                    <button className="remove-att-btn" onClick={() => removeAttachment(i)} title="Remove">
+                      <X size={14} />
+                    </button>
                   </div>
                 ) : (
-                  <div key={i} className="attachment-image shadow-sm" style={{ backgroundImage: `url(${att.url})` }}></div>
+                  <div key={i} className="attachment-image shadow-sm relative" style={{ backgroundImage: `url(${att.url})` }}>
+                    <button className="remove-att-btn img-ver" onClick={() => removeAttachment(i)} title="Remove">
+                      <X size={14} />
+                    </button>
+                  </div>
                 )
               ))}
             </div>

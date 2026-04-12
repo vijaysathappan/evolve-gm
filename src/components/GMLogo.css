@@ -1,0 +1,78 @@
+.gm-logo-container {
+  width: calc(var(--logo-size) * 2.5);
+  height: var(--logo-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.gm-logo-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
+}
+
+.gm-path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: drawStroke 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards infinite alternate;
+}
+
+.g-path {
+  animation-delay: 0s;
+}
+
+.m-path {
+  animation-delay: 0.5s;
+}
+
+@keyframes drawStroke {
+  0% {
+    stroke-dashoffset: 200;
+    opacity: 0.5;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.energy-dot {
+  opacity: 0;
+  animation: dotPulse 2.5s ease-in-out infinite alternate;
+}
+
+.energy-dot.dot-1 {
+  animation-delay: 1s;
+}
+
+.energy-dot.dot-2 {
+  animation-delay: 1.5s;
+}
+
+@keyframes dotPulse {
+  0%, 40% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.5);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+.gm-logo-container:hover .gm-path {
+  filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.4));
+  transition: filter 0.3s ease;
+}

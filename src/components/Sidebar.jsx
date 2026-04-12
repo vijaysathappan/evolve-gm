@@ -8,14 +8,13 @@ import './Sidebar.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogout, userTrack, setUserTrack }) {
+export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogout }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [expanded, setExpanded] = useState(window.innerWidth > 768);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [history, setHistory] = useState([]);
-  const [showPlanOptions, setShowPlanOptions] = useState(false);
 
   const toggleSidebar = () => {
     if (isMobile) {
@@ -25,7 +24,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
     }
   };
 
-  const fetchHistory = async () => {
+  const fetchHistory = React.useCallback(async () => {
     if (!user?.id) return;
     try {
       const resp = await fetch(`${API_BASE_URL}/api/chat/list/${user.id}`);
@@ -36,7 +35,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
     } catch (err) {
       console.error('Failed to fetch sidebar history', err);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchHistory();
@@ -62,7 +61,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       window.removeEventListener('toggleSidebar', handleToggle);
       window.removeEventListener('refreshChatList', fetchHistory);
     };
-  }, [user?.id]);
+  }, [fetchHistory]);
 
   const [editingId, setEditingId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
@@ -650,21 +649,18 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
           return (<>
           <div className="sidebar-top flex-col">
             <div className="sidebar-header">
-              <div className="sidebar-logo-container flex-row items-center gap-3">
-                {showExpanded && (
-                  <h1 className="sidebar-title">
-                    Evolve <span className="gm-bold">GM</span>
-                  </h1>
-                )}
-              </div>
-
               <button
                 className="icon-btn menu-btn"
                 onClick={isMobile ? () => setMobileOpen(false) : toggleSidebar}
                 title={isMobile ? 'Close menu' : (expanded ? 'Collapse menu' : 'Expand menu')}
               >
-                {isMobile ? <ArrowLeft size={20} /> : <Menu size={20} />}
+                {isMobile ? <ArrowLeft size={20} /> : <Menu size={20} className={expanded ? 'rotate-icon' : ''} />}
               </button>
+               {showExpanded && (
+                 <h1 className="sidebar-title animate-fadeIn">
+                   Evolve <span className="gm-bold">GM</span>
+                 </h1>
+               )}
             </div>
 
             <div className="new-chat-wrapper">

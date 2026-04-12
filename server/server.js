@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
 import User from './models/User.js';
 import Message from './models/Message.js';
 
@@ -30,11 +31,14 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ message: 'User ID or Email already exists' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     const newUser = new User({
       username,
       userId,
       email,
-      password // In a real app, hash this password!
+      password: hashedPassword,
+      course: 'default'
     });
 
     const createdUser = await newUser.save();
@@ -68,11 +72,44 @@ app.post('/api/auth/signin', async (req, res) => {
       return res.status(400).json({ message: 'Invalid User ID' });
     }
 
-    if (user.password !== password) {
+    // --- Secure Password Verification with Legacy Support ---
+    let isPasswordValid = false;
+    let needsUpgrade = false;
+
+    try {
+      // 1. Try BCrypt comparison (for new/upgraded accounts)
+      isPasswordValid = await bcrypt.compare(password, user.password);
+    } catch (e) {
+      // If user.password is not a valid hash (legacy), bcrypt might throw or return false
+      isPasswordValid = false;
+    }
+
+    // 2. Fallback to plain-text check (for legacy accounts)
+    if (!isPasswordValid && user.password === password) {
+      isPasswordValid = true;
+      needsUpgrade = true;
+      console.log(`[AUTH] Legacy account detected for ${userId}. Upgrading to hash...`);
+    }
+
+    if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid Password' });
     }
 
-    // Check if user is active before allowing login
+    // 3. Auto-upgrade legacy plain-text passwords to hashes
+    if (needsUpgrade) {
+      const newHash = await bcrypt.hash(password, 10);
+      try {
+        await User.supabase
+          .from('users_data')
+          .update({ password: newHash })
+          .eq('id', user.id);
+        console.log(`[AUTH] Successfully upgraded ${userId} to secure hashing.`);
+      } catch (err) {
+        console.error(`[AUTH ERROR] Failed to upgrade password for ${userId}:`, err);
+      }
+    }
+
+    // Check if user is active
     if (!user.is_active) {
       return res.status(403).json({ message: 'You are Not Active' });
     }

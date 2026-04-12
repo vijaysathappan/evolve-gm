@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from database import get_session_history, save_message_to_session
+from database import get_session_history_async, save_message_to_session_async
 
 class QueryRequest(BaseModel):
     query: str = Field(..., description="The user's query sent to Evolve GM")
@@ -34,14 +34,14 @@ async def generate_response(request: QueryRequest):
         # 2. Retrieve history context if session exists
         history = []
         if request.chat_data_id:
-            history = get_session_history(request.chat_data_id)
+            history = await get_session_history_async(request.chat_data_id)
         
         # 3. Generate response (now with history context)
         text = await generate_llm_response(safe_query, history)
         
         # 4. Save the interaction back to the session row in Supabase
         if request.chat_data_id:
-            save_message_to_session(request.chat_data_id, safe_query, text, request.user_id)
+            await save_message_to_session_async(request.chat_data_id, safe_query, text, request.user_id)
             
         return {"text": text}
     except HTTPException as he:

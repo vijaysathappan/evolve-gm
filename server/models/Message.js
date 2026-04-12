@@ -1,4 +1,4 @@
-import { supabase } from './User.js';
+import { supabase, withRetry } from './User.js';
 
 export default class Message {
   constructor(data) {
@@ -17,11 +17,13 @@ export default class Message {
 
   static async save(sessionId, { query, response }, tokens = {}, costs = {}, title = null) {
     // 1. Check if this specific session row already exists
-    const { data: existing, error: findError } = await supabase
-      .from('chat_messages')
-      .select('id, session_id, content, total_tokens, created_at')
-      .eq('id', sessionId)
-      .maybeSingle();
+    const { data: existing, error: findError } = await withRetry(() => 
+      supabase
+        .from('chat_messages')
+        .select('id, session_id, content, total_tokens, created_at')
+        .eq('id', sessionId)
+        .maybeSingle()
+    );
 
     if (existing) {
       // 2. Update existing session: Append to the content array
@@ -29,15 +31,17 @@ export default class Message {
         ? [...existing.content, { query, response }] 
         : [existing.content, { query, response }];
       
-      const { data: updated, error: updateError } = await supabase
-        .from('chat_messages')
-        .update({
-          content: updatedContent,
-          total_tokens: (existing.total_tokens || 0) + (tokens.total || 0)
-        })
-        .eq('id', sessionId)
-        .select('id, session_id, content, total_tokens, created_at')
-        .single();
+      const { data: updated, error: updateError } = await withRetry(() => 
+        supabase
+          .from('chat_messages')
+          .update({
+            content: updatedContent,
+            total_tokens: (existing.total_tokens || 0) + (tokens.total || 0)
+          })
+          .eq('id', sessionId)
+          .select('id, session_id, content, total_tokens, created_at')
+          .single()
+      );
         
       if (updateError) throw updateError;
       return new Message(updated);
@@ -48,11 +52,13 @@ export default class Message {
   }
 
   static async getHistory(sessionId) {
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .select('id, session_id, content, total_tokens, created_at')
-      .eq('id', sessionId)
-      .single();
+    const { data, error } = await withRetry(() => 
+      supabase
+        .from('chat_messages')
+        .select('id, session_id, content, total_tokens, created_at')
+        .eq('id', sessionId)
+        .single()
+    );
 
     if (error) {
         if (error.code === 'PGRST116') return [];

@@ -42,9 +42,6 @@
 .sidebar-user-card {
   display: none;
 }
-.sidebar-signout-btn {
-  display: none;
-}
 .sidebar-divider {
   display: none;
 }
@@ -304,40 +301,56 @@
 }
 
 .sidebar-header {
-  padding: 0;
-  margin-bottom: 24px;
+  padding: 12px;
+  margin-bottom: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   width: 100%;
-  gap: 24px; /* Space between logo and menu toggle */
+  min-height: 64px; /* Matches collapsed width for a square top gap */
 }
 
 .gemini-sidebar.expanded .sidebar-header {
-  flex-direction: row;
+  padding: 12px 20px;
   justify-content: flex-start;
-  padding: 0 16px;
 }
 
 .sidebar-title {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   letter-spacing: -0.01em;
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  font-weight: 300;
+  font-weight: 500;
   margin-left: 12px;
+  animation: fadeIn 0.4s ease forwards;
 }
 
 .sidebar-title .gm-bold {
   font-weight: 800;
-  margin-left: 4px;
-  background: linear-gradient(135deg, var(--accent-brand), var(--accent-orange));
+  margin-left: 6px;
+  background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808, #FF9933);
+  background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: energyFlow 6s linear infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 153, 51, 0.2));
+}
+
+@keyframes energyFlow {
+  0% { 
+    background-position: 0% center; 
+    filter: drop-shadow(0 0 5px rgba(255, 153, 51, 0.3));
+  }
+  50% { 
+    filter: drop-shadow(0 0 15px rgba(19, 136, 8, 0.5));
+  }
+  100% { 
+    background-position: 300% center; 
+    filter: drop-shadow(0 0 5px rgba(255, 153, 51, 0.3));
+  }
 }
 
 .sidebar-logo-container {
@@ -354,16 +367,23 @@
 }
 
 .menu-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
-  margin: 0 auto; /* Centered by default */
+  margin: 0; 
+}
+.menu-btn svg {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rotate-icon {
+  transform: rotate(90deg);
 }
 
 .menu-btn:hover {
@@ -373,8 +393,7 @@
 }
 
 .gemini-sidebar.expanded .menu-btn {
-  margin-left: auto;
-  margin-right: 0;
+  margin-left: 0;
 }
 
 /* Mobile: arrow-left button gets a subtle pill background */
@@ -587,15 +606,8 @@
 
 /* Sign Out nav item — mobile sidebar only */
 .sidebar-signout-nav {
-  display: none; /* hidden on desktop */
   color: var(--text-muted);
   transition: all 0.2s;
-}
-
-@media (max-width: 768px) {
-  .sidebar-signout-nav {
-    display: flex !important;
-  }
 }
 
 .sidebar-signout-nav:hover {

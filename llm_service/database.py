@@ -11,7 +11,23 @@ key: str = os.getenv("SUPABASE_ANON_KEY")
 if not url or not key:
     print("[DB ERROR] Supabase credentials not found in environment.")
 
+from supabase import create_client, Client
+from supabase.client import ClientOptions
+from supabase.lib.client_options import ClientOptions as AsyncClientOptions
+
+# Note: supabase-py doesn't have a stable official AsyncClient in older versions, 
+# but we can use asyncio.to_thread for I/O blocking calls to prevent event loop stalls.
+import asyncio
+
 supabase: Client = create_client(url, key)
+
+async def get_session_history_async(session_uuid: str):
+    """Fetches the conversation history for a specific session row asynchronously."""
+    return await asyncio.to_thread(get_session_history, session_uuid)
+
+async def save_message_to_session_async(session_uuid: str, query: str, response_text: str, user_id: str = None):
+    """Saves the interaction to the session row asynchronously."""
+    return await asyncio.to_thread(save_message_to_session, session_uuid, query, response_text, user_id)
 
 def get_session_history(session_uuid: str):
     """Fetches the conversation history for a specific session row in chat_messages."""
