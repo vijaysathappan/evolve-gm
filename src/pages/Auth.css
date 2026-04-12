@@ -10,6 +10,7 @@
   overflow: hidden;
   padding: 24px 16px;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+  box-sizing: border-box;
 }
 
 /* ── Animated Background ── */
@@ -309,36 +310,164 @@
   color: #818cf8;
 }
 
+/* ── Mobile Background Animations ── */
+.mobile-bg-anim {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bg-anim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* Floating orbs */
+  .m-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.55;
+    animation: m-orb-float 10s ease-in-out infinite alternate;
+  }
+
+  .m-orb-1 {
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.45) 0%, transparent 70%);
+    top: -60px; right: -60px;
+    animation-duration: 9s;
+  }
+
+  .m-orb-2 {
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, transparent 70%);
+    bottom: -50px; left: -50px;
+    animation-duration: 12s;
+    animation-delay: -5s;
+  }
+
+  .m-orb-3 {
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%);
+    top: 45%; left: -40px;
+    animation-duration: 14s;
+    animation-delay: -3s;
+  }
+
+  .m-orb-4 {
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(244, 63, 94, 0.2) 0%, transparent 70%);
+    top: 10%; right: -30px;
+    animation-duration: 11s;
+    animation-delay: -7s;
+  }
+
+  @keyframes m-orb-float {
+    0%   { transform: translate(0px, 0px) scale(1); }
+    33%  { transform: translate(12px, -18px) scale(1.06); }
+    66%  { transform: translate(-10px, 10px) scale(0.96); }
+    100% { transform: translate(8px, 22px) scale(1.04); }
+  }
+
+  /* Floating sparkle dots */
+  .m-spark {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    animation: m-spark-rise linear infinite;
+  }
+
+  .m-spark:nth-child(1)  { width: 3px; height: 3px; left: 15%; bottom: -10px; animation-duration: 7s; animation-delay: 0s; }
+  .m-spark:nth-child(2)  { width: 2px; height: 2px; left: 30%; bottom: -10px; animation-duration: 9s; animation-delay: 1.5s; }
+  .m-spark:nth-child(3)  { width: 4px; height: 4px; left: 55%; bottom: -10px; animation-duration: 6s; animation-delay: 2.5s; }
+  .m-spark:nth-child(4)  { width: 2px; height: 2px; left: 70%; bottom: -10px; animation-duration: 8s; animation-delay: 0.8s; }
+  .m-spark:nth-child(5)  { width: 3px; height: 3px; left: 85%; bottom: -10px; animation-duration: 11s; animation-delay: 3s; }
+  .m-spark:nth-child(6)  { width: 2px; height: 2px; left: 42%; bottom: -10px; animation-duration: 7.5s; animation-delay: 4s; }
+  .m-spark:nth-child(7)  { width: 3px; height: 3px; left: 8%;  bottom: -10px; animation-duration: 10s; animation-delay: 1s; }
+  .m-spark:nth-child(8)  { width: 2px; height: 2px; left: 93%; bottom: -10px; animation-duration: 8.5s; animation-delay: 2s; }
+
+  @keyframes m-spark-rise {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    10%  { opacity: 0.9; }
+    80%  { opacity: 0.5; }
+    100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+  }
+
+  /* Grid overlay shimmer */
+  .m-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(129, 140, 248, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(129, 140, 248, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: m-grid-shift 20s linear infinite;
+  }
+
+  @keyframes m-grid-shift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+  }
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .auth-container {
-    padding: 16px 12px;
-    align-items: flex-start;
-    padding-top: 40px;
+    padding: 16px 16px;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
   }
 
   .auth-card {
-    padding: 32px 20px 28px;
-    border-radius: 20px;
+    padding: 36px 22px 30px;
+    border-radius: 22px;
     max-width: 100%;
+    width: 100%;
+    margin: auto;
+  }
+
+  .auth-header {
+    margin-bottom: 28px;
+  }
+
+  .title-wrapper {
+    gap: 10px;
   }
 
   .main-title {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
   }
 
   .auth-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
+    margin-top: 4px;
+  }
+
+  .auth-form {
+    gap: 14px;
   }
 
   .input-field input {
-    padding: 12px 12px;
-    font-size: 0.875rem;
+    padding: 13px 12px;
+    font-size: 0.9rem;
   }
 
   .auth-submit {
-    padding: 13px;
-    font-size: 0.875rem;
+    padding: 14px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+  }
+
+  .auth-footer {
+    margin-top: 24px;
+  }
+
+  .auth-footer p {
+    font-size: 0.82rem;
   }
 }
 

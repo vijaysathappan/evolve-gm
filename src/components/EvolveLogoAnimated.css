@@ -1,0 +1,44 @@
+/* ── Evolve GM Logo Wrapper ── */
+
+.evolve-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.4s ease;
+}
+
+/* Gentle float — logo breathes up/down */
+.evolve-logo-wrap svg {
+  animation: eg-float 3.8s ease-in-out infinite;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes eg-float {
+  0%, 100% { transform: translateY(0);      }
+  50%       { transform: translateY(-2px);  }
+}
+
+/* ── Expanded: multi-colour Google-style glow pulse ── */
+.evolve-logo-wrap.evolve-logo--expanded {
+  animation: eg-glow 3s ease-in-out infinite;
+}
+
+@keyframes eg-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(66, 133, 244, 0.35))
+            drop-shadow(0 0 2px rgba(234, 67, 53, 0.2));
+  }
+  33% {
+    filter: drop-shadow(0 0 8px rgba(52, 168, 83, 0.45))
+            drop-shadow(0 0 3px rgba(251, 188, 5, 0.3));
+  }
+  66% {
+    filter: drop-shadow(0 0 10px rgba(66, 133, 244, 0.55))
+            drop-shadow(0 0 4px rgba(234, 67, 53, 0.35));
+  }
+}
+
+/* ── Collapsed: faint resting blue glow ── */
+.evolve-logo-wrap:not(.evolve-logo--expanded) {
+  filter: drop-shadow(0 0 3px rgba(66, 133, 244, 0.22));
+}

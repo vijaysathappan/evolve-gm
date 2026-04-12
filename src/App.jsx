@@ -30,7 +30,7 @@ function App() {
   }
 
   return (
-    <>
+    <div style={{ display: 'flex', width: '100%', height: '100dvh', overflow: 'hidden', position: 'relative' }}>
       <Sidebar 
         user={user} 
         userTrack={userTrack}
@@ -39,7 +39,7 @@ function App() {
         onSelectChat={handleSelectChat} 
         onLogout={handleLogout} 
       />
-      <div className="flex-1 overflow-hidden" style={{ display: 'flex' }}>
+      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex' }}>
         <MainPad 
             user={user} 
             userTrack={userTrack}
@@ -47,7 +47,7 @@ function App() {
             onLogout={handleLogout} 
         />
       </div>
-    </>
+    </div>
   );
 }
 

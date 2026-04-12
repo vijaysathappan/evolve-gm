@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './Auth.css';
-import BookLogo from '../components/BookLogo';
 import { Eye, EyeOff, User, Mail, Lock, ShieldCheck } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -170,7 +169,6 @@ const Auth = ({ onLogin }) => {
       <div className="auth-card neon-border">
         <div className="auth-header">
           <div className="title-wrapper gap-3">
-            <BookLogo size="42px" className="auth-book-logo" />
             <h1 className="main-title">
               {isSignUp ? 'Join' : 'Authorize'} Evolve <span className="gm-bold">GM</span>
             </h1>
@@ -290,6 +288,23 @@ const Auth = ({ onLogin }) => {
       <div className="auth-background">
         <div className="glow glow-1"></div>
         <div className="glow glow-2"></div>
+      </div>
+
+      {/* Mobile-only animated background */}
+      <div className="mobile-bg-anim">
+        <div className="m-grid"></div>
+        <div className="m-orb m-orb-1"></div>
+        <div className="m-orb m-orb-2"></div>
+        <div className="m-orb m-orb-3"></div>
+        <div className="m-orb m-orb-4"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
+        <div className="m-spark"></div>
       </div>
     </div>
   );

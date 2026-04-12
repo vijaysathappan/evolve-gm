@@ -17,7 +17,7 @@
   background-color: var(--bg-sidebar);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* Buttery smooth spring-like feel */
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   padding: 1.25rem 0;
   overflow: hidden;
   position: relative;
@@ -25,6 +25,7 @@
   white-space: nowrap;
   border-right: 1px solid var(--border-color);
   will-change: width;
+  flex-shrink: 0;
 }
 
 .gemini-sidebar.expanded {
@@ -33,6 +34,273 @@
 
 .gemini-sidebar.collapsed {
   width: 64px;
+}
+
+/* ── Mobile Drawer ── */
+
+/* Sidebar user card — mobile only (hidden on desktop) */
+.sidebar-user-card {
+  display: none;
+}
+.sidebar-signout-btn {
+  display: none;
+}
+.sidebar-divider {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .gemini-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 280px !important;
+    z-index: 200;
+    transform: translateX(-105%);
+    /* Spring-eased slide — snappy open, smooth close */
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.42s ease;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+    background-color: rgba(10, 10, 12, 0.97);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+  }
+
+  .gemini-sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 6px 0 48px rgba(0, 0, 0, 0.55), 2px 0 12px rgba(0,0,0,0.3);
+  }
+
+  /* On mobile, sidebar-top should take all available space */
+  .gemini-sidebar .sidebar-top {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Pin settings to bottom inside mobile drawer */
+  .gemini-sidebar .sidebar-bottom {
+    flex-shrink: 0;
+    padding: 12px 0 24px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 8px;
+  }
+
+  /* Make nav items left-aligned with padding in expanded mobile drawer */
+  .gemini-sidebar.mobile-open .nav-item {
+    justify-content: flex-start;
+    padding: 0 12px 0 20px;
+    border-radius: 0 20px 20px 0;
+    width: calc(100% - 12px);
+    animation: mob-item-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Stagger each item */
+  .gemini-sidebar.mobile-open .nav-item:nth-child(1) { animation-delay: 0.05s; }
+  .gemini-sidebar.mobile-open .nav-item:nth-child(2) { animation-delay: 0.10s; }
+  .gemini-sidebar.mobile-open .nav-item:nth-child(3) { animation-delay: 0.14s; }
+  .gemini-sidebar.mobile-open .nav-item:nth-child(4) { animation-delay: 0.18s; }
+  .gemini-sidebar.mobile-open .nav-item:nth-child(5) { animation-delay: 0.21s; }
+  .gemini-sidebar.mobile-open .nav-item:nth-child(n+6) { animation-delay: 0.24s; }
+
+  @keyframes mob-item-in {
+    from { opacity: 0; transform: translateX(-14px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Header logo+title slide in */
+  .gemini-sidebar.mobile-open .sidebar-header {
+    animation: mob-header-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.02s;
+  }
+
+  @keyframes mob-header-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Make new chat btn full width in mobile drawer */
+  .gemini-sidebar.mobile-open .new-chat-btn {
+    width: 100%;
+    padding: 0 12px;
+    justify-content: center;
+    animation: mob-item-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.04s;
+  }
+
+
+  /* Backdrop overlay — uses opacity+visibility so CLOSE also fades */
+  .mobile-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 199;
+    /* Always rendered, toggled via opacity+visibility */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.38s ease, visibility 0.38s ease;
+  }
+
+  .mobile-sidebar-backdrop.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @keyframes backdropFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── Mobile user card at bottom of sidebar ── */
+  .sidebar-user-card {
+    display: flex !important;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 0 8px 4px 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+  }
+
+  .sidebar-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(129,140,248,0.3), rgba(245,158,11,0.3));
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .sidebar-user-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-user-email {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Sign Out button */
+  .sidebar-signout-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 16px);
+    margin: 0 8px 4px 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-signout-btn:hover {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #f87171;
+  }
+
+  /* Divider between sign out and settings */
+  .sidebar-divider {
+    display: block !important;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 4px 16px 4px 16px;
+  }
+}
+
+/* ── Account Profile Card (Settings > Account tab) ── */
+.acct-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.acct-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(129,140,248,0.4), rgba(245,158,11,0.4));
+  border: 2px solid rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.acct-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.acct-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acct-email {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hide desktop avatar on mobile */
+@media (max-width: 768px) {
+  .avatar-desktop-only {
+    display: none !important;
+  }
 }
 
 .sidebar-header {
@@ -93,7 +361,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: var(--transition-smooth);
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   margin: 0 auto; /* Centered by default */
 }
@@ -101,11 +369,39 @@
 .menu-btn:hover {
   background-color: var(--bg-hover);
   color: var(--text-primary);
+  transform: scale(1.08);
 }
 
 .gemini-sidebar.expanded .menu-btn {
   margin-left: auto;
   margin-right: 0;
+}
+
+/* Mobile: arrow-left button gets a subtle pill background */
+@media (max-width: 768px) {
+  .menu-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: var(--text-primary);
+    transition: background 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .menu-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateX(-2px) scale(1.05);
+  }
+  
+  /* Icon entrance slide */
+  .menu-btn svg {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .menu-btn:hover svg {
+    transform: translateX(-2px);
+  }
 }
 
 .new-chat-wrapper {
@@ -289,7 +585,433 @@
   color: var(--text-primary);
 }
 
+/* Sign Out nav item — mobile sidebar only */
+.sidebar-signout-nav {
+  display: none; /* hidden on desktop */
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+@media (max-width: 768px) {
+  .sidebar-signout-nav {
+    display: flex !important;
+  }
+}
+
+.sidebar-signout-nav:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #fca5a5 !important;
+}
+
+.sidebar-signout-nav .history-icon {
+  color: inherit;
+}
+
+/* ── Compact Delete Confirm Modal ── */
+.delete-confirm-modal {
+  background: rgba(16, 16, 20, 0.96);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+  padding: 28px 24px 24px 24px;
+  width: 300px;
+  max-width: 88vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.delete-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f87171;
+  margin-bottom: 4px;
+}
+
+.delete-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.delete-modal-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.delete-modal-cancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.delete-modal-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.delete-modal-confirm {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  background: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+
+.delete-modal-confirm:hover {
+  background: #ef4444;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+
+/* ── Dashboard Styles ── */
+.dashboard-stats-grid {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dash-stat-carousel-viewport {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dash-stat-carousel-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.dashboard-stats-grid.carousel-mode .dash-stat-card {
+  min-width: 100%;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.carousel-nav-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.carousel-nav-btn:active {
+  background: rgba(129, 140, 248, 0.2);
+  color: #818cf8;
+}
+
+.carousel-dots {
+  margin-bottom: 24px;
+}
+
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.carousel-dot.active {
+  width: 18px;
+  border-radius: 4px;
+  background: #818cf8;
+}
+
+.dash-stat-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.dash-stat-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(129, 140, 248, 0.2);
+  transform: translateY(-2px);
+}
+
+.dash-stat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.dash-stat-icon {
+  padding: 4px;
+  border-radius: 6px;
+}
+.dash-stat-icon.time   { background: rgba(129, 140, 248, 0.1); color: #818cf8; }
+.dash-stat-icon.days   { background: rgba(52, 211, 153, 0.1); color: #34d399; }
+.dash-stat-icon.streak { background: rgba(251, 113, 133, 0.1); color: #fb7185; }
+
+.dash-stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.dash-stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Heatmap Styles ── */
+.heatmap-container {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.heatmap-header {
+  margin-bottom: 24px;
+}
+
+.custom-dropdown-container {
+  position: relative;
+}
+
+.custom-dash-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 16px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 90px;
+  justify-content: space-between;
+}
+
+.custom-dash-select:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.custom-dash-select.active {
+  background: rgba(129, 140, 248, 0.1);
+  border-color: #818cf8;
+}
+
+.select-arrow {
+  transition: transform 0.3s ease;
+  color: var(--text-muted);
+}
+
+.select-arrow.rotated {
+  transform: rotate(180deg);
+  color: #818cf8;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(22, 22, 24, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 6px;
+  z-index: 1000;
+  min-width: 130px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dropdown-option {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropdown-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.dropdown-option.selected {
+  background: rgba(129, 140, 248, 0.15);
+  color: #818cf8;
+  font-weight: 600;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.heatmap-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.heatmap-summary {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.heatmap-scroll-area {
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.heatmap-grid-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 800px; /* Ensure map doesn't wrap */
+}
+
+.heatmap-labels-y {
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* aligns roughly with rows */
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding-top: 18px; /* offset for alignment with cells */
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 4px;
+}
+
+.heatmap-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transition: transform 0.1s ease;
+}
+
+.heatmap-cell-empty {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(255,255,255,0.2);
+  z-index: 10;
+}
+
+.heatmap-cell.level-0 { background: rgba(255, 255, 255, 0.06); }
+.heatmap-cell.level-1 { background: #1e3a8a; } /* Deep Blue */
+.heatmap-cell.level-2 { background: #3b82f6; } /* Bright Blue */
+.heatmap-cell.level-3 { background: #60a5fa; } /* Light Blue */
+.heatmap-cell.level-4 { background: #93c5fd; } /* Very Light Blue */
+
+/* Accent match - overlaying color for active theme maybe? For now standard blues feel premium */
+
+.heatmap-month-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.heatmap-month-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+
+.heatmap-legend {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  justify-content: flex-end;
+}
+
+/* ── Mobile Adjustments for Dashboard ── */
+@media (max-width: 768px) {
+  .heatmap-container {
+    padding: 16px;
+  }
+  
+  .heatmap-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
 /* Advanced Settings Modal Overhaul */
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .settings-modal {
   background-color: rgba(14, 14, 17, 0.85);
   backdrop-filter: blur(48px);
@@ -535,36 +1257,188 @@
   color: #fff;
 }
 
-/* Responsive Modal */
+/* Responsive Modal — Mobile Bottom Sheet */
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
+  /* Overlay becomes bottom-sheet backdrop */
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0;
+  }
+
+  /* Settings modal → full-height bottom sheet */
   .settings-modal {
     flex-direction: column;
-    height: 95vh;
-    width: 95vw;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 96dvh;
+    max-height: 96dvh;
+    border-radius: 24px 24px 0 0 !important;
+    animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    display: flex;
   }
+
+  /* Drag handle bar at very top */
+  .settings-modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    margin: 10px auto 0 auto;
+    flex-shrink: 0;
+  }
+
+  /* Left nav panel becomes horizontal tab bar */
   .settings-sidebar {
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 16px;
+    width: 100% !important;
+    height: auto !important;
+    flex-shrink: 0;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding: 10px 12px 0 12px !important;
+    background: rgba(0, 0, 0, 0.15);
   }
+
+  .settings-sidebar h2 {
+    font-size: 1rem !important;
+    font-weight: 700;
+    margin-bottom: 10px !important;
+    padding-left: 4px !important;
+    letter-spacing: -0.01em;
+  }
+
+  /* Close button stays top-right */
+  .modal-header {
+    padding: 0 4px 8px 4px;
+  }
+
+  /* Horizontal scrollable tab row */
   .settings-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 8px;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    padding-bottom: 10px !important;
+    gap: 6px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .settings-nav::-webkit-scrollbar { display: none; }
+
+  /* Tab pill buttons */
   .settings-nav-item {
-    width: auto;
-    white-space: nowrap;
+    width: auto !important;
+    white-space: nowrap !important;
+    padding: 7px 14px !important;
+    font-size: 0.8rem !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    gap: 6px !important;
   }
+
+  .settings-nav-item.active {
+    background: rgba(129, 140, 248, 0.2) !important;
+    border-color: rgba(129, 140, 248, 0.4) !important;
+    color: #818cf8 !important;
+  }
+
+  /* Scrollable content area */
   .settings-main-content {
-    padding: 24px;
+    flex: 1;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px !important;
+    min-height: 0;
   }
+
+  /* Pane title smaller */
+  .pane-title {
+    font-size: 1.15rem !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Subscription plan cards stack vertically */
   .plan-comparison-grid {
-    flex-direction: column;
+    flex-direction: column !important;
+    gap: 20px !important;
   }
+
+  /* Current plan card compact */
+  .current-plan-card {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .plan-headline { font-size: 1.1rem !important; }
+  .plan-manage-btn { padding: 8px 14px !important; font-size: 0.82rem !important; }
+
+  /* Comp cards */
+  .comp-card { padding: 18px !important; }
+  .comp-price { font-size: 1.6rem !important; margin-bottom: 14px !important; }
+  .comp-name { font-size: 1rem !important; margin-bottom: 8px !important; }
+  .comp-features { gap: 8px !important; margin-bottom: 16px !important; }
+  .comp-features li { font-size: 0.85rem !important; }
+
+  /* Token stats row wraps neatly */
+  .token-stats-row {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .token-stat-card {
+    min-width: calc(50% - 5px) !important;
+    padding: 12px !important;
+    flex: none !important;
+  }
+  .tsc-value { font-size: 1.2rem !important; }
+
+  /* Token bar chart — smaller bars on mobile */
+  .tok-bar-track { height: 90px !important; }
+  .tok-bar-pct { font-size: 0.6rem !important; }
+  .tok-bar-label { font-size: 0.68rem !important; }
+  .tok-bar-val { font-size: 0.6rem !important; }
+  .tok-bar-col { min-width: 30px !important; gap: 4px !important; }
+  .tok-bar-track { width: 18px !important; }
+  .token-chart-wrap { padding: 14px !important; }
+
+  /* Promo banner — stack on mobile */
+  .promo-banner {
+    flex-direction: column !important;
+    gap: 14px !important;
+    align-items: flex-start !important;
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+  }
+  .promo-banner > div { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+  .promo-icon-bg { width: 36px !important; height: 36px !important; border-radius: 10px !important; }
+  .promo-title { font-size: 0.95rem !important; }
+  .promo-desc { font-size: 0.8rem !important; }
+  .promo-btn { width: 100% !important; text-align: center !important; padding: 10px !important; }
+
+  /* Settings rows */
+  .settings-row { padding: 14px 0 !important; }
+  .row-label { font-size: 0.9rem !important; }
+  .row-desc { font-size: 0.78rem !important; }
+  .row-action-btn { font-size: 0.78rem !important; padding: 6px 10px !important; white-space: nowrap; }
+
+  /* Theme option row wraps */
+  .theme-option-row { flex-wrap: wrap !important; gap: 10px !important; }
+  .theme-preview { width: 60px !important; height: 40px !important; }
+  .theme-option-btn { padding: 8px 12px !important; }
+
+  /* Accent swatches larger touch targets */
+  .accent-swatch { width: 36px !important; height: 36px !important; }
 }
+
 
 /* ── Token Usage Chart ── */
 .token-stats-row { flex-wrap: wrap; }

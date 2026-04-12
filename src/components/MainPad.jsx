@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Menu, Plus, Mic, Send, Image as ImageIcon, FileText, Link as LinkIcon, Sparkles, ChevronDown, AlignLeft, X, User, Settings, LogOut, Loader2, Globe, BookOpen, Paperclip, RotateCw } from 'lucide-react';
-import BookLogo from './BookLogo';
 import './MainPad.css';
 
 const NODE_API_URL = import.meta.env.VITE_API_URL || '';
@@ -324,21 +323,24 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
               </div>
            </div>
 
-           <div className="avatar profile-avatar-large cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
-              {userName.substring(0, 2).toUpperCase()}
-           </div>
+           {/* Avatar — hidden on mobile, shown on desktop only */}
+           <div className="avatar-desktop-only">
+             <div className="avatar profile-avatar-large cursor-pointer" onClick={() => setShowProfileModal(!showProfileModal)}>
+                {userName.substring(0, 2).toUpperCase()}
+             </div>
 
-           {showProfileModal && (
-            <div className="profile-dropdown shadow-lg flex-col">
-              <div className="profile-header">
-                <strong>{user?.username}</strong>
-                <span className="text-muted" style={{ display: 'block', fontSize: '0.8rem' }}>{user?.email}</span>
+             {showProfileModal && (
+              <div className="profile-dropdown shadow-lg flex-col">
+                <div className="profile-header">
+                  <strong>{user?.username}</strong>
+                  <span className="text-muted" style={{ display: 'block', fontSize: '0.8rem' }}>{user?.email}</span>
+                </div>
+                <hr className="profile-divider" />
+                <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
+                <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
               </div>
-              <hr className="profile-divider" />
-              <button className="profile-item" onClick={() => { setActiveModal('profile'); setShowProfileModal(false); }}><User size={16} className="mr-2" /> Profile</button>
-              <button className="profile-item" onClick={() => { setActiveModal('signout'); setShowProfileModal(false); }}><LogOut size={16} className="mr-2" /> Sign Out</button>
-            </div>
-           )}
+             )}
+           </div>
         </div>
       </header>
 
@@ -374,7 +376,6 @@ export default function MainPad({ user, selectedSessionId, onLogout, userTrack }
                     </div>
                   ) : (
                     <div key={msg.id} className="chat-message ai-message flex-row gap-4 mb-4">
-                      {msg.isThinking ? null : <BookLogo className="shrink-0 mt-1" size="24px" />}
                       <div className="message-content flex-col">
                         {msg.isThinking ? (
                           <div className="thinking-animation-container flex-col items-center gap-2">
