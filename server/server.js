@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import User from './models/User.js';
@@ -424,7 +426,10 @@ app.post('/api/exam/save', async (req, res) => {
 });
 
 // Serve local PDF books static route
-app.use('/api/books', express.static('C:/Projects/evolve-gm/utils/books'));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use('/api/books', express.static(path.join(__dirname, '..', 'utils', 'books')));
 
 // --- Learn Mode Bridge/Proxy Endpoints ---
 app.post('/api/learn/generate', async (req, res) => {

@@ -63,7 +63,9 @@ async def health_check():
 import os
 import json
 
-CACHE_DIR = "C:/Projects/evolve-gm/utils/llm_content"
+# Use /tmp in Vercel/production for writable cache, otherwise use relative path
+is_vercel = os.getenv("VERCEL") == "1" or not os.path.exists("C:/Projects")
+CACHE_DIR = "/tmp/llm_content" if is_vercel else os.path.join(os.path.dirname(__file__), "..", "utils", "llm_content")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 def get_cache_path(subject: str, chapter: str, sec_idx: int) -> str:
@@ -192,8 +194,8 @@ class ExplainSectionRequest(BaseModel):
 @app.post("/api/learn/generate")
 async def learn_generate(request: LearnGenerateRequest, background_tasks: BackgroundTasks):
     try:
-        # Load local JSON file
-        txt_path = "C:/Projects/evolve-gm/utils/extracted_data/physics_class11_chapter1.txt"
+        # Load local JSON file using relative path
+        txt_path = os.path.join(os.path.dirname(__file__), "..", "utils", "extracted_data", "physics_class11_chapter1.txt")
         with open(txt_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             
