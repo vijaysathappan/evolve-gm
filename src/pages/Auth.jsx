@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import './Auth.css';
-import { Eye, EyeOff, User, Mail, Lock, ShieldCheck } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+import { Loader2, Mail, Lock, User, ArrowRight, Github, Sparkles, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const Auth = ({ onLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);

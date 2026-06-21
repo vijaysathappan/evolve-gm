@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "The magnitudes of physical quantities may be added together or subtracted from one another only if they have the same dimensions. In other words, we can add or subtract similar physical quantities. Thus, velocity cannot be added to force, or an electric current cannot be subtracted from the thermodynamic temperature. This simple principle called the principle of homogeneity of dimensions in an equation is extremely useful in checking the correctness of an equation.",
+    "explanation": "The principle of homogeneity is basically saying every term in a physics equation must be measuring the same type of thing. Think of it like currency exchange — you cannot simply add 100 rupees to 100 dollars without converting them first, because they represent different things in different scales. Similarly, in a physics equation like distance equals initial velocity times time plus half times acceleration times time squared, every single term on both sides of the equation must work out to have the dimension of length. If even one term comes out to a different dimension, the whole equation is wrong. This is your fastest fact-checking tool — use it in exams to eliminate wrong answer options in seconds."
+  }
+]

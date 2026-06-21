@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "The method of dimensions can sometimes be used to deduce relation among the physical quantities. For this we should know the dependence of the physical quantity on other quantities (upto three physical quantities or linearly independent variables) and consider it as a product type of the dependence.",
+    "explanation": "Now here is one of the coolest tricks in all of physics — you can sometimes figure out what a formula should look like just by thinking about dimensions, even without doing any experiment. The idea is: if you know that some quantity depends on a few other quantities, you assume the relationship is a product — something like Q equals k times A to the power x, times B to the power y, times C to the power z. Then you write out the dimensions of both sides and solve for x, y, and z. It is like being a detective where the only clues you have are what type of quantities are involved, and you deduce the formula from those clues alone. The limitation is that this method cannot tell you the exact numerical constant k — for that you need an experiment. But getting the structure of the formula is already a huge win."
+  }
+]

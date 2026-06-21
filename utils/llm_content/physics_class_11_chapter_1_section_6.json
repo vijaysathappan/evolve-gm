@@ -1,0 +1,10 @@
+[
+  {
+    "paragraph": "The nature of a physical quantity is described by its dimensions. All the physical quantities represented by derived units can be expressed in terms of some combination of seven fundamental or base quantities. We shall call these base quantities as the seven dimensions of the physical world, which are denoted with square brackets.",
+    "explanation": "Think of dimensions as the DNA of a physical quantity. Just like every living organism is built from the same fundamental base pairs of DNA, every physical quantity in physics is built from just seven fundamental dimensions — Mass, Length, Time, Electric Current, Temperature, Amount of Substance, and Luminous Intensity. These are the absolute building blocks. When we write dimensions, we use square bracket notation to show what a quantity is made of. It is like writing the ingredients list on the back of a food product — it tells you exactly what is in it at the most fundamental level."
+  },
+  {
+    "paragraph": "For example, the volume occupied by an object is expressed as the product of length, breadth and height, or three lengths. Hence the dimensions of volume are [L] × [L] × [L] = [L]3 = [L3]. As the volume is independent of mass and time, it is said to possess zero dimension in mass [M°], zero dimension in time [T°] and three dimensions in length.",
+    "explanation": "Let us work through volume as a concrete example. Volume equals length times breadth times height, right? Each of those three quantities is a length. So when you write out the dimensions, you get L times L times L, which equals L cubed. Since volume has nothing to do with mass or time, we say it has zero dimensions in mass and zero dimensions in time. The full formal way to write it is M to the power zero, L to the power three, T to the power zero — which just means mass does not appear, length appears three times, and time does not appear. It is like saying a pizza has zero fish, three layers of cheese, and zero chocolate — you are describing exactly what is in it."
+  }
+]

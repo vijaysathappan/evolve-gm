@@ -7,7 +7,7 @@ export default class Message {
     this.content = data.content; // JSONB: { query, response }
     this.input_tokens = data.input_tokens || 0;
     this.output_tokens = data.output_tokens || 0;
-    this.total_tokens = data.total_tokens || 0;
+    this.total_token = data.total_tokens || data.total_token || 0;
     this.input_cost = data.input_cost || 0;
     this.output_cost = data.output_cost || 0;
     this.total_cost = data.total_cost || 0;
@@ -55,16 +55,19 @@ export default class Message {
     const { data, error } = await withRetry(() => 
       supabase
         .from('chat_messages')
-        .select('id, session_id, content, total_tokens, created_at')
+        .select('id, session_id, content, chat_type, total_tokens, created_at')
         .eq('id', sessionId)
         .single()
     );
 
     if (error) {
-        if (error.code === 'PGRST116') return [];
+        if (error.code === 'PGRST116') return { type: 'doubt', content: [] };
         throw error;
     }
-    return Array.isArray(data.content) ? data.content : [];
+    return { 
+      type: data.chat_type || 'doubt', 
+      content: data.content || [] 
+    };
   }
 
   static async getUserChatHistory(userId) {

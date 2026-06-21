@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "The rule by convention is that the preceding digit is raised by 1 if the insignificant digit to be dropped is more than 5, and is left unchanged if the latter is less than 5. But what if the number is 2.745 in which the insignificant digit is 5. Here, the convention is that if the preceding digit is even, the insignificant digit is simply dropped and, if it is odd, the preceding digit is raised by 1.",
+    "explanation": "Rounding sounds simple but there is one tricky situation that trips everyone up — what do you do when the dropped digit is exactly 5? If it is more than 5, you round up — straightforward. If it is less than 5, you leave it alone — also straightforward. But when it is exactly 5, here is the neat trick: look at the digit just before it. If that digit is even, you drop the 5 and leave it as is. If that digit is odd, you round it up by one. So 2.745 rounds to 2.74 because 4 is even. And 2.735 rounds to 2.74 because 3 is odd. This even-odd rule prevents any systematic bias in large calculations — it is like the referee calling fair coin flips to keep things balanced across many rounds."
+  }
+]

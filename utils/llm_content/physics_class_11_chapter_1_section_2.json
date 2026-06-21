@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "As discussed above, every measurement involves errors. Thus, the result of measurement should be reported in a way that indicates the precision of measurement. Normally, the reported result of measurement is a number that includes all digits in the number that are known reliably plus the first digit that is uncertain. The reliable digits plus the first uncertain digit are known as significant digits or significant figures.",
+    "explanation": "Okay so here is the thing about measurements — no instrument is perfect. There's always a tiny bit of uncertainty. Significant figures are basically the honest way of reporting a measurement, where you include all the digits you are really sure about, plus one last digit that you are estimating. For example, if a stopwatch shows 12.6 seconds, that means the 1 and the 2 are certain, but the 6 might be slightly off. So this reading has three significant figures. It's like in cricket statistics — you can be confident about the runs scored, but the exact strike rate might have some rounding involved depending on how precisely the balls were counted."
+  }
+]

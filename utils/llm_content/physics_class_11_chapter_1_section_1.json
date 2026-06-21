@@ -1,0 +1,10 @@
+[
+  {
+    "paragraph": "In earlier time scientists of different countries were using different systems of units for measurement. Three such systems, the CGS, the FPS (or British) system and the MKS system were in use extensively till recently.",
+    "explanation": "Imagine if different gaming platforms used completely incompatible save files — PlayStation players couldn't share data with Xbox players, and everything would be a mess. That was exactly the problem in early science. Different countries used totally different unit systems. The CGS system used centimetres for length, grams for mass, and seconds for time. The FPS system — used mostly in Britain and America — used feet, pounds, and seconds. And the MKS system used metres, kilograms, and seconds. Scientists were constantly struggling to convert between them, like trying to convert miles to kilometres when you switch from an American road trip app to a European one."
+  },
+  {
+    "paragraph": "The system of units which is at present internationally accepted for measurement is the Système Internationale d' Unites (French for International System of Units), abbreviated as SI. The SI, with standard scheme of symbols, units and abbreviations, developed by the Bureau International des Poids et measures (The International Bureau of Weights and Measures, BIPM) in 1971 were recently revised by the General Conference on Weights and Measures in November 2018.",
+    "explanation": "To solve that chaos, the world finally agreed on one universal system — the SI system, which stands for International System of Units in French. Think of it like the FIFA deciding on one set of official football rules so that a match in Brazil follows the same rules as one in Germany. The SI system was developed by an international organization called the BIPM back in 1971. And just like how apps get software updates, the SI system got a major update in November 2018, where some unit definitions were made even more precise and tied to fundamental constants of nature instead of physical objects."
+  }
+]

@@ -1,0 +1,343 @@
+.chapter-container {
+  height: 100%;
+  width: 100%;
+  background: transparent; /* whiteboard bg comes from classroom-board parent */
+  display: flex;
+  flex-direction: column;
+}
+
+.chapter-viewer-header {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.92);
+  border-bottom: 1px solid #ddd9cc;
+  gap: 14px;
+  height: 50px;
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.exit-btn {
+  background: rgba(44,42,36,0.06);
+  border: 1px solid #ddd9cc;
+  color: #4a4840;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exit-btn:hover {
+  background: rgba(124,58,237,0.08);
+  border-color: rgba(124,58,237,0.3);
+  color: #7c3aed;
+}
+
+.section-select-toc {
+  background: white;
+  border: 1px solid #ddd9cc;
+  color: #2c2a24;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  max-width: 260px;
+  transition: border-color 0.2s;
+}
+
+.section-select-toc:hover {
+  border-color: #7c3aed;
+}
+
+.view-mode-toggle {
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px;
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.toggle-btn.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(140, 82, 255, 0.3);
+}
+
+.chapter-viewer-content-area {
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-iframe-wrapper {
+  width: 100%;
+  height: 100%;
+  background: #FAFAF8;
+}
+
+.chapter-viewer-container {
+  height: 100%;
+  width: 100%;
+  background: #FAFAF8;
+  padding: 0;
+  overflow-y: auto;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* SCREEN-SHARE BOOK — fills entire whiteboard */
+.book-page {
+  width: 100%;
+  min-height: 100%;
+  background: #FAFAF8;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 36px 52px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.book-page-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 8px;
+  margin-bottom: 28px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #7A766A;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.book-page-body {
+  flex: 1;
+}
+
+.book-section-title {
+  font-family: Georgia, serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: #1A365D; /* NCERT Navy Blue header */
+  line-height: 1.3;
+}
+
+/* Paragraph Blocks serif style */
+.paragraph-block {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+  line-height: 1.85;
+  color: #2D3748; /* Highly readable charcoal */
+  margin-bottom: 24px;
+  text-align: justify;
+  text-justify: inter-word;
+  transition: all 0.25s ease;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+}
+
+.paragraph-block:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Paragraph Highlight classes */
+.paragraph-block.paragraph-explaining {
+  background: rgba(254, 240, 138, 0.5); /* Highlighter Yellow */
+  border-left-color: #D97706; /* Golden Amber */
+  color: #1A202C;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.08);
+}
+
+.paragraph-block.paragraph-paused {
+  background: rgba(254, 240, 138, 0.3);
+  border-left-color: #F59E0B;
+  color: #1A202C;
+}
+
+.paragraph-block.paragraph-read {
+  color: #718096;
+  opacity: 0.75;
+}
+
+/* Drop Cap Style */
+.drop-cap {
+  font-family: Georgia, serif;
+  float: left;
+  font-size: 3.2rem;
+  line-height: 0.8;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-left: 3px;
+  font-weight: 700;
+  color: #1A365D; /* NCERT Blue */
+}
+
+.book-page-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 12px;
+  margin-top: 40px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7A766A;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Tables, Examples and Unsolved styles */
+.book-page-extras {
+  margin-top: 36px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.textbook-table-container {
+  background: #F4F1E8;
+  border: 1px solid #D6D2C4;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.table-caption {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #1A365D;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.textbook-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.textbook-table th {
+  background: #E5E1D4;
+  padding: 10px 12px;
+  color: #1A365D;
+  font-weight: 700;
+  border-bottom: 2px solid #C4C0B2;
+}
+
+.textbook-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #E5E1D4;
+  color: #2D3748;
+}
+
+.textbook-table tr:hover td {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.table-footnote {
+  font-size: 0.8rem;
+  color: #7A766A;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.textbook-example-card {
+  background: #EEF4FA; /* Soft light blue NCERT example box */
+  border: 1px solid #D2E2F0;
+  border-left: 5px solid #1A365D;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.example-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1A365D;
+}
+
+.example-question, .example-answer {
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+  color: #2D3748;
+  line-height: 1.6;
+}
+
+.example-answer {
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  padding-top: 12px;
+  margin-bottom: 0;
+}
+
+.textbook-unsolved-card {
+  background: #FDF7F5; /* Soft light orange/rust NCERT exercise box */
+  border: 1px solid #EADCD0;
+  border-left: 5px solid #8A1C14;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.unsolved-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #8A1C14;
+}
+
+.unsolved-text {
+  font-size: 0.92rem;
+  color: #2D3748;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+/* Spinner */
+.book-loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loader-small {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

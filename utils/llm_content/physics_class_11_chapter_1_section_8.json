@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "The recognition of concepts of dimensions, which guide the description of physical behaviour is of basic importance as only those physical quantities can be added or subtracted which have the same dimensions. A thorough understanding of dimensional analysis helps us in deducing certain relations among different physical quantities and checking the derivation, accuracy and dimensional consistency or homogeneity of various mathematical expressions.",
+    "explanation": "Here is a super powerful idea — you can only add or subtract things that are the same type of thing. You cannot add your speed to your weight, right? That makes no physical sense. In physics, this translates to: only quantities with the same dimensions can be added or subtracted. Speed has dimensions of L divided by T, and force has dimensions of M times L divided by T squared — you absolutely cannot add these two. This principle is called dimensional analysis, and it is like a spell-checker for physics equations. If an equation tries to add quantities with different dimensions, you know instantly it is wrong. You can also use it to figure out what form an equation should take, which is incredibly useful in exams."
+  }
+]

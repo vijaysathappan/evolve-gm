@@ -1,20 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu, Plus, MessageSquare, Settings, HelpCircle, X, Shield, Lock, FileText, Share2, Trash2, CreditCard, Pencil, ChevronDown,
-  Bell, Monitor, Database, Heart, Globe, Type, Languages, Info, ArrowUpRight, CheckCircle, Smartphone, LogOut, ArrowLeft,
-  LayoutGrid, Clock, Flame, Calendar, BarChart3
+  Menu, Plus, Settings, LogOut, ArrowLeft,
+  MessageSquare, Award, Sparkles, LayoutGrid, Monitor, HelpCircle,
+  CreditCard, Lock, ArrowUpRight, Database, Calendar, Flame,
+  CheckCircle, ChevronDown, ChevronRight, Pencil, Trash2,
+  FileText, BookOpen, Globe, Clock, BarChart3,
+  Folder, FolderOpen, PlayCircle, X
 } from 'lucide-react';
 import './Sidebar.css';
+import { API_BASE_URL } from '../config/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-
-export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogout }) {
+export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogout, userTrack, setUserTrack, activeView, setActiveView, activeLearnChapter, setActiveLearnChapter }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [expanded, setExpanded] = useState(window.innerWidth > 768);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [history, setHistory] = useState([]);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [totalTokens, setTotalTokens] = useState(0);
+
+  // My Learning Folder Tree state
+  const [expandedNodes, setExpandedNodes] = useState({ 'my-learning': true });
+  
+  const toggleNode = (nodeId, e) => {
+    e.stopPropagation();
+    setExpandedNodes(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
+  };
 
   const toggleSidebar = () => {
     if (isMobile) {
@@ -37,8 +49,132 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
     }
   }, [user?.id]);
 
+  const fetchTokenUsage = React.useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/user/usage/${user.id}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.total_token !== undefined) {
+          setTotalTokens(data.total_token);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch token usage in sidebar:', err);
+    }
+  }, [user?.id]);
+
+  const fetchUserActivity = React.useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/user/activity/${user.id}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        const activity = data.activity || [];
+        
+        let totalTokens = 0;
+        let inputTokens = 0;
+        let outputTokens = 0;
+        let chatMode = 0;
+        let examMode = 0;
+        let quizMode = 0;
+        
+        const dateCounts = {};
+        
+        activity.forEach(row => {
+          totalTokens += row.total_token || 0;
+          inputTokens += row.input_tokens || 0;
+          outputTokens += row.output_tokens || 0;
+          
+          if (row.chat_type === 'exam') examMode += row.total_token || 0;
+          else if (row.chat_type === 'quiz') quizMode += row.total_token || 0;
+          else chatMode += row.total_token || 0;
+
+          if (row.created_at) {
+            const d = new Date(row.created_at);
+            const dateStr = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+            dateCounts[dateStr] = (dateCounts[dateStr] || 0) + 1;
+          }
+        });
+        
+        setHeatmapData(dateCounts);
+        
+        const activeDates = Object.keys(dateCounts).sort();
+        const activeDaysCount = activeDates.length;
+        
+        let currentStreak = 0;
+        let maxStreak = 0;
+        let lastDate = null;
+        
+        activeDates.forEach(dateStr => {
+          const date = new Date(dateStr);
+          if (!lastDate) {
+            currentStreak = 1;
+          } else {
+            const diffTime = Math.abs(date - lastDate);
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 1) {
+              currentStreak++;
+            } else if (diffDays > 1) {
+              currentStreak = 1;
+            }
+          }
+          if (currentStreak > maxStreak) {
+            maxStreak = currentStreak;
+          }
+          lastDate = date;
+        });
+        
+        const totalMinutes = Math.floor(totalTokens / 1000);
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        const timeUsageStr = `${hours}h ${mins}m`;
+        
+        setDashboardStats({
+          timeUsageStr,
+          activeDays: activeDaysCount,
+          maxStreak,
+          totalSubmissions: activity.length
+        });
+
+        const now = new Date();
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const currentDay = now.getDate();
+        const dailyAvg = totalTokens / Math.max(1, activeDaysCount);
+        const currentMonthTokens = activity
+            .filter(r => new Date(r.created_at).getMonth() === now.getMonth() && new Date(r.created_at).getFullYear() === now.getFullYear())
+            .reduce((acc, r) => acc + (r.total_token || 0), 0);
+        const monthDailyAvg = currentMonthTokens / Math.max(1, currentDay);
+        const forecast = currentMonthTokens + (monthDailyAvg * (daysInMonth - currentDay));
+
+        setTokenAnalytics({
+          inputTokens,
+          outputTokens,
+          chatMode,
+          examMode,
+          quizMode,
+          dailyAvg: Math.round(dailyAvg),
+          forecast: Math.round(forecast)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch user activity:', err);
+    }
+  }, [user?.id]);
+
+  const getPlanDescription = () => {
+    const limit = 40000;
+    const pct = (totalTokens / limit) * 100;
+    if (pct <= 25) return 'Free';
+    if (pct <= 50) return 'Low';
+    if (pct <= 75) return 'Medium';
+    return 'High';
+  };
+
   useEffect(() => {
     fetchHistory();
+    fetchTokenUsage();
+    fetchUserActivity();
 
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
@@ -55,13 +191,40 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       }
     };
     window.addEventListener('toggleSidebar', handleToggle);
-    window.addEventListener('refreshChatList', fetchHistory);
+
+    const handleRefresh = () => {
+      fetchHistory();
+      fetchTokenUsage();
+    };
+    window.addEventListener('refreshChatList', handleRefresh);
+
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('toggleSidebar', handleToggle);
-      window.removeEventListener('refreshChatList', fetchHistory);
+      window.removeEventListener('refreshChatList', handleRefresh);
     };
-  }, [fetchHistory]);
+  }, [fetchHistory, fetchTokenUsage]);
+
+
+  
+  const [dashboardStats, setDashboardStats] = useState({
+    timeUsageStr: '0h 0m',
+    activeDays: 0,
+    maxStreak: 0,
+    totalSubmissions: 0
+  });
+  
+  const [tokenAnalytics, setTokenAnalytics] = useState({
+    inputTokens: 0,
+    outputTokens: 0,
+    chatMode: 0,
+    examMode: 0,
+    quizMode: 0,
+    dailyAvg: 0,
+    forecast: 0
+  });
+  
+  const [heatmapData, setHeatmapData] = useState({});
 
   const [editingId, setEditingId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
@@ -176,6 +339,14 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // fetchTokenUsage moved up
+
+  useEffect(() => {
+    if (showSettings) {
+      fetchTokenUsage();
+    }
+  }, [showSettings, fetchTokenUsage]);
+
   const applyTheme = (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('evolve-theme', newTheme);
@@ -196,20 +367,28 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
     document.documentElement.style.setProperty('--accent-brand', accents[color] || accents.indigo);
   };
 
-  const tokenData = [
-    { month: 'Oct', used: 2100, limit: 10000 },
-    { month: 'Nov', used: 4800, limit: 10000 },
-    { month: 'Dec', used: 7200, limit: 10000 },
-    { month: 'Jan', used: 3100, limit: 10000 },
-    { month: 'Feb', used: 5500, limit: 10000 },
-    { month: 'Mar', used: 9100, limit: 10000 },
-    { month: 'Apr', used: 1000, limit: 10000 },
-  ];
+  const getDynamicChartData = () => {
+    const monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    const result = [];
+    
+    // Generate the last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mName = monthsList[d.getMonth()];
+      const isCurrent = i === 0;
+      result.push({
+        month: mName,
+        used: isCurrent ? totalTokens : 0,
+        limit: 40000
+      });
+    }
+    return result;
+  };
 
   const categories = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={18} /> },
     { id: 'general', label: 'General', icon: <Settings size={18} /> },
-    { id: 'token-usage', label: 'Token Usage', icon: <Database size={18} /> },
     { id: 'personalization', label: 'Personalization', icon: <Monitor size={18} /> },
     { id: 'account', label: 'Account', icon: <HelpCircle size={18} /> },
     { id: 'subscription', label: 'Subscription', icon: <CreditCard size={18} /> }
@@ -222,60 +401,47 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
           <div className="settings-pane animate-fadeIn">
             <h3 className="pane-title">Dashboard</h3>
             
-            <div className="dashboard-stats-grid carousel-mode">
-              <button 
-                className="carousel-nav-btn prev" 
-                onClick={() => setActiveStatIndex((prev) => (prev > 0 ? prev - 1 : 2))}
-              >
-                <ArrowLeft size={18} />
-              </button>
-
-              <div className="dash-stat-carousel-viewport">
-                <div 
-                  className="dash-stat-carousel-track" 
-                  style={{ transform: `translateX(-${activeStatIndex * 100}%)` }}
-                >
-                  <div className="dash-stat-card">
-                    <div className="dash-stat-header">
-                      <Clock size={16} className="dash-stat-icon time" />
-                      <span>Total Time Usage</span>
-                    </div>
-                    <div className="dash-stat-value">0h 0m</div>
-                    <div className="dash-stat-sub">Starting today</div>
+            <div className="dashboard-stats-grid bento-grid">
+              
+              <div className="dash-stat-card bento-wide" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)', borderColor: 'rgba(99,102,241,0.2)' }}>
+                <div className="dash-stat-header flex-row items-center justify-between w-full">
+                  <div className="flex-row items-center gap-2">
+                    <Database size={16} className="dash-stat-icon" style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.2)' }} />
+                    <span style={{ fontWeight: 600, color: '#fff' }}>Token Capacity</span>
                   </div>
-                  
-                  <div className="dash-stat-card">
-                    <div className="dash-stat-header">
-                      <Calendar size={16} className="dash-stat-icon days" />
-                      <span>Total Active Days</span>
-                    </div>
-                    <div className="dash-stat-value">0</div>
-                    <div className="dash-stat-sub">Across 1 month</div>
-                  </div>
-                  
-                  <div className="dash-stat-card">
-                    <div className="dash-stat-header">
-                      <Flame size={16} className="dash-stat-icon streak" />
-                      <span>Max Streak</span>
-                    </div>
-                    <div className="dash-stat-value">0</div>
-                    <div className="dash-stat-sub">Current: 0 days</div>
-                  </div>
+                  <span className="dash-stat-sub" style={{ margin: 0 }}>{Math.round((totalTokens / 40000) * 100)}% Used</span>
+                </div>
+                
+                <div className="usage-progress-bar" style={{ marginTop: '16px', marginBottom: '8px', height: '8px' }}>
+                  <div 
+                    className="usage-progress-fill" 
+                    style={{ width: `${Math.min((totalTokens / 40000) * 100, 100)}%`, background: 'linear-gradient(90deg, #8b5cf6, #d946ef)' }}
+                  ></div>
+                </div>
+                
+                <div className="flex-row items-center justify-between w-full">
+                  <div className="dash-stat-value" style={{ fontSize: '1.25rem' }}>{totalTokens.toLocaleString()}</div>
+                  <div className="dash-stat-sub">of 40,000 Limit</div>
                 </div>
               </div>
 
-              <button 
-                className="carousel-nav-btn next" 
-                onClick={() => setActiveStatIndex((prev) => (prev < 2 ? prev + 1 : 0))}
-              >
-                <ArrowUpRight size={18} style={{ transform: 'rotate(45deg)' }} /> 
-              </button>
-            </div>
-
-            <div className="carousel-dots flex-row justify-center gap-2">
-              {[0, 1, 2].map(i => (
-                <div key={i} className={`carousel-dot ${activeStatIndex === i ? 'active' : ''}`} />
-              ))}
+              <div className="dash-stat-card">
+                <div className="dash-stat-header">
+                  <Calendar size={16} className="dash-stat-icon days" />
+                  <span>Active Days</span>
+                </div>
+                <div className="dash-stat-value">{dashboardStats.activeDays}</div>
+                <div className="dash-stat-sub">Lifetime</div>
+              </div>
+              
+              <div className="dash-stat-card">
+                <div className="dash-stat-header">
+                  <Flame size={16} className="dash-stat-icon streak" />
+                  <span>Max Streak</span>
+                </div>
+                <div className="dash-stat-value">{dashboardStats.maxStreak}</div>
+                <div className="dash-stat-sub">Days</div>
+              </div>
             </div>
 
             <div className="heatmap-container">
@@ -283,7 +449,14 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                 <div className="flex-col">
                   <div className="heatmap-title">Activity Breakdown</div>
                   <div className="heatmap-summary flex-row gap-4">
-                    <span>0 submissions in {selectedMonth} {selectedYear}</span>
+                    <span>{
+                      Object.entries(heatmapData).filter(([dateStr, count]) => {
+                        if (selectedMonth === 'All') return dateStr.startsWith(selectedYear);
+                        const mIdx = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(selectedMonth);
+                        const expectedMonthStr = (mIdx + 1).toString().padStart(2, '0');
+                        return dateStr.startsWith(`${selectedYear}-${expectedMonthStr}`);
+                      }).reduce((acc, [_, count]) => acc + count, 0)
+                    } submissions in {selectedMonth === 'All' ? '' : selectedMonth + ' '}{selectedYear}</span>
                   </div>
                 </div>
                 
@@ -369,12 +542,22 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                                     const dayIdx = colIndex * 7 + rowIndex;
                                     if (dayIdx >= daysInMonth) return <div key={rowIndex} className="heatmap-cell-empty" />;
                                     
-                                    const intensity = 0;
+                                    const expectedMonthStr = (mIdx + 1).toString().padStart(2, '0');
+                                    const expectedDayStr = (dayIdx + 1).toString().padStart(2, '0');
+                                    const dateKey = `${yearNum}-${expectedMonthStr}-${expectedDayStr}`;
+                                    const count = heatmapData[dateKey] || 0;
+                                    
+                                    let intensity = 0;
+                                    if (count > 0 && count <= 2) intensity = 1;
+                                    else if (count > 2 && count <= 5) intensity = 2;
+                                    else if (count > 5 && count <= 10) intensity = 3;
+                                    else if (count > 10) intensity = 4;
+                                    
                                     return (
                                       <div 
                                         key={rowIndex} 
                                         className={`heatmap-cell level-${intensity}`}
-                                        title={`${monthName} ${dayIdx + 1}: Level ${intensity}`}
+                                        title={`${monthName} ${dayIdx + 1}: ${count} submissions`}
                                       />
                                     );
                                   })}
@@ -400,6 +583,50 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                 <span>More</span>
               </div>
             </div>
+
+            <div className="token-chart-wrap analytics-dashboard" style={{ marginTop: '24px' }}>
+              <div className="token-chart-label-row flex-row items-center justify-between" style={{ marginBottom: '16px' }}>
+                <span style={{ fontSize: '1rem', color: 'var(--text-primary)', fontWeight: 700 }}>Advanced Consumption Analytics</span>
+              </div>
+              
+              <div className="analytics-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                {/* Panel 2: Usage by Mode */}
+                <div className="analytics-panel">
+                  <div className="analytics-header">
+                    <span className="analytics-title">Usage by Mode</span>
+                  </div>
+                  <div className="mode-bars flex-col gap-3">
+                    <div className="mode-bar-row">
+                      <div className="mode-label flex-row justify-between"><span>Exams</span> <span>{Math.round((tokenAnalytics.examMode / (totalTokens || 1)) * 100)}%</span></div>
+                      <div className="mode-progress"><div className="mode-fill exam-fill" style={{ width: `${(tokenAnalytics.examMode / (totalTokens || 1)) * 100}%` }}></div></div>
+                    </div>
+                    <div className="mode-bar-row">
+                      <div className="mode-label flex-row justify-between"><span>Quizzes</span> <span>{Math.round((tokenAnalytics.quizMode / (totalTokens || 1)) * 100)}%</span></div>
+                      <div className="mode-progress"><div className="mode-fill quiz-fill" style={{ width: `${(tokenAnalytics.quizMode / (totalTokens || 1)) * 100}%` }}></div></div>
+                    </div>
+                    <div className="mode-bar-row">
+                      <div className="mode-label flex-row justify-between"><span>Chat & Doubt</span> <span>{Math.round((tokenAnalytics.chatMode / (totalTokens || 1)) * 100)}%</span></div>
+                      <div className="mode-progress"><div className="mode-fill chat-fill" style={{ width: `${(tokenAnalytics.chatMode / (totalTokens || 1)) * 100}%` }}></div></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panel 3: Monthly Forecast */}
+                <div className="analytics-panel">
+                  <div className="analytics-header">
+                    <span className="analytics-title">Monthly Forecast</span>
+                  </div>
+                  <div className="forecast-content flex-col items-center justify-center">
+                    <span className="forecast-value">{tokenAnalytics.forecast.toLocaleString()}</span>
+                    <span className="forecast-sub">Projected tokens this month</span>
+                    <div className="forecast-status" style={{ color: tokenAnalytics.forecast > 40000 ? '#ef4444' : '#10b981', marginTop: '12px', fontWeight: 600 }}>
+                      {tokenAnalytics.forecast > 40000 ? 'Warning: Limit Exceeded' : 'On Track'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         );
 
@@ -436,66 +663,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
           </div>
         );
 
-      case 'token-usage': {
-        const maxUsed = Math.max(...tokenData.map(d => d.used));
-        const currentMonth = tokenData[tokenData.length - 1];
-        const totalUsed = tokenData.reduce((s, d) => s + d.used, 0);
-        const avgUsed = Math.round(totalUsed / tokenData.length);
-        return (
-          <div className="settings-pane animate-fadeIn">
-            <h3 className="pane-title">Token Usage</h3>
-            <div className="token-stats-row flex-row gap-4" style={{ marginBottom: '28px' }}>
-              <div className="token-stat-card flex-col">
-                <span className="tsc-label">This Month</span>
-                <span className="tsc-value">{currentMonth.used.toLocaleString()}</span>
-                <span className="tsc-sub">{Math.round(currentMonth.used / currentMonth.limit * 100)}% of limit</span>
-              </div>
-              <div className="token-stat-card flex-col">
-                <span className="tsc-label">Monthly Avg</span>
-                <span className="tsc-value">{avgUsed.toLocaleString()}</span>
-                <span className="tsc-sub">over 7 months</span>
-              </div>
-              <div className="token-stat-card flex-col">
-                <span className="tsc-label">Plan Limit</span>
-                <span className="tsc-value">10,000</span>
-                <span className="tsc-sub">tokens / mo</span>
-              </div>
-            </div>
 
-            <div className="token-chart-wrap">
-              <div className="token-chart-label-row flex-row items-center justify-between" style={{ marginBottom: '12px' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Monthly Breakdown</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Limit: 10,000 tokens</span>
-              </div>
-              <div className="token-bar-chart flex-row items-end gap-3">
-                {tokenData.map((d) => {
-                  const pct = d.used / d.limit * 100;
-                  const barColor = pct < 50 ? '#10b981' : pct < 80 ? '#f59e0b' : '#ef4444';
-                  const barHeight = Math.max((d.used / maxUsed) * 140, 8);
-                  return (
-                    <div key={d.month} className="tok-bar-col flex-col items-center gap-2">
-                      <span className="tok-bar-pct" style={{ color: barColor }}>{Math.round(pct)}%</span>
-                      <div className="tok-bar-track">
-                        <div
-                          className="tok-bar-fill"
-                          style={{ height: `${barHeight}px`, background: barColor, boxShadow: `0 0 12px ${barColor}55` }}
-                        />
-                      </div>
-                      <span className="tok-bar-label">{d.month}</span>
-                      <span className="tok-bar-val">{(d.used / 1000).toFixed(1)}k</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="tok-legend flex-row items-center gap-4" style={{ marginTop: '20px' }}>
-                <span className="tok-leg-item" style={{ color: '#10b981' }}>● Under 50%</span>
-                <span className="tok-leg-item" style={{ color: '#f59e0b' }}>● 50–80%</span>
-                <span className="tok-leg-item" style={{ color: '#ef4444' }}>● Over 80%</span>
-              </div>
-            </div>
-          </div>
-        );
-      }
 
       case 'personalization':
         return (
@@ -566,7 +734,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                 <div className="comp-card flex-col flex-1">
                   <span className="comp-name">Evolve Free</span>
                   <ul className="comp-features">
-                    <li><CheckCircle size={14} className="check-icon" /> 10k monthly tokens</li>
+                    <li><CheckCircle size={14} className="check-icon" /> 40k monthly tokens</li>
                     <li><CheckCircle size={14} className="check-icon" /> Standard speed</li>
                     <li><CheckCircle size={14} className="check-icon" /> Basic web search</li>
                   </ul>
@@ -594,7 +762,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
           <div className="settings-pane animate-fadeIn">
             <h3 className="pane-title">Account</h3>
             <div className="acct-profile-card">
-              <div className="acct-avatar">{user?.username?.substring(0, 2).toUpperCase()}</div>
+              <div className="acct-avatar">{(user?.username || user?.userId || '??').substring(0, 2).toUpperCase()}</div>
               <div className="acct-identity">
                 <span className="acct-name">{user?.username}</span>
                 <span className="acct-email">{user?.email || '—'}</span>
@@ -647,7 +815,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
         {(() => {
           const showExpanded = expanded || (isMobile && mobileOpen);
           return (<>
-          <div className="sidebar-top flex-col">
+          <div className="sidebar-top flex-col" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <div className="sidebar-header">
               <button
                 className="icon-btn menu-btn"
@@ -663,74 +831,253 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                )}
             </div>
 
+            {showExpanded && (
+              <div className="sidebar-modes animate-fadeIn">
+                <button 
+                  className={`sidebar-mode-btn ${activeView === 'chat' ? 'active' : ''}`}
+                  onClick={() => setActiveView('chat')}
+                >
+                  Chat
+                </button>
+                <button 
+                  className={`sidebar-mode-btn ${activeView === 'learn' ? 'active' : ''}`}
+                  onClick={() => setActiveView('learn')}
+                >
+                  Learn
+                </button>
+                <button 
+                  className={`sidebar-mode-btn ${activeView === 'practice' ? 'active' : ''}`}
+                  onClick={() => setActiveView('practice')}
+                >
+                  Practice
+                </button>
+              </div>
+            )}
+
             <div className="new-chat-wrapper">
-              <button className="new-chat-btn" title="New Chat" onClick={handleNewChat}>
-                <Plus size={18} className="plus-icon" />
-                {showExpanded && <span className="nav-label">New chat</span>}
-              </button>
+              {activeView === 'chat' && (
+                <button className="new-chat-btn animate-fadeIn" title="New Chat" onClick={handleNewChat}>
+                  <Plus size={18} className="plus-icon" />
+                  {showExpanded && <span className="nav-label">New chat</span>}
+                </button>
+              )}
+
+              {activeView === 'practice' && (
+                <button className="new-chat-btn animate-fadeIn" title="Start Quiz" onClick={() => alert('Starting a randomized diagnostic practice session.')}>
+                  <Plus size={18} className="plus-icon" />
+                  {showExpanded && <span className="nav-label">Start quiz</span>}
+                </button>
+              )}
             </div>
 
             <nav className={`nav-menu flex-col w-full ${showAllHistory ? 'scrollable-menu custom-scrollbar' : ''}`}>
-               {showExpanded && history.length > 0 && <div className="recent-label">Recent</div>}
-               
-               {/* Chat History items */}
-               {displayedHistory.map((chat) => (
-                 <div 
-                    key={chat.id} 
-                    className={`nav-item history-item ${selectedSessionId === chat.session_id ? 'active' : ''}`} 
-                    title={chat.title} 
-                    onClick={() => { if (editingId !== chat.id) { onSelectChat(chat.session_id); if (isMobile) setMobileOpen(false); } }}
-                  >
-                   <div className="history-content flex-row items-center w-full">
-                     <MessageSquare size={18} strokeWidth={1.5} className="history-icon" />
-                     {editingId === chat.id ? (
-                         <input 
-                           className="rename-input" 
-                           value={newTitle}
-                           autoFocus
-                           onChange={(e) => setNewTitle(e.target.value)}
-                           onKeyDown={(e) => e.key === 'Enter' && handleRename(chat.id, chat.title)}
-                           onBlur={() => handleRename(chat.id, chat.title)}
-                           onClick={(e) => e.stopPropagation()}
-                         />
-                     ) : (
-                         <span className="nav-label truncate">{chat.title}</span>
-                     )}
-                   </div>
+               {activeView === 'chat' && (
+                 <>
+                   {showExpanded && history.length > 0 && <div className="recent-label">Recent Chats</div>}
                    
-                   {showExpanded && editingId !== chat.id && (
-                     <div className="history-actions flex-row items-center">
-                        <button className="context-btn" onClick={(e) => { e.stopPropagation(); handleRename(chat.id, chat.title); }} title="Rename session">
-                          <Pencil size={14} />
-                        </button>
-                        <button className="context-btn" onClick={(e) => deleteChat(e, chat.id)} title="Delete session">
-                          <Trash2 size={14} />
-                        </button>
+                   {/* Chat History items */}
+                   {displayedHistory.map((chat) => (
+                     <div 
+                        key={chat.id} 
+                        className={`nav-item history-item ${selectedSessionId === chat.session_id ? 'active' : ''}`} 
+                        title={chat.title} 
+                        onClick={() => { if (editingId !== chat.id) { onSelectChat(chat.session_id); if (isMobile) setMobileOpen(false); } }}
+                     >
+                       <div className="history-content flex-row items-center w-full">
+                         {chat.chat_type === 'exam' ? (
+                           <Award size={18} strokeWidth={1.5} className="history-icon" style={{ color: '#f59e0b' }} />
+                         ) : chat.chat_type === 'solve' ? (
+                           <Sparkles size={18} strokeWidth={1.5} className="history-icon" style={{ color: '#d946ef' }} />
+                         ) : (
+                           <MessageSquare size={18} strokeWidth={1.5} className="history-icon" />
+                         )}
+                         {editingId === chat.id ? (
+                             <input 
+                               className="rename-input" 
+                               value={newTitle}
+                               autoFocus
+                               onChange={(e) => setNewTitle(e.target.value)}
+                               onKeyDown={(e) => e.key === 'Enter' && handleRename(chat.id, chat.title)}
+                               onBlur={() => handleRename(chat.id, chat.title)}
+                               onClick={(e) => e.stopPropagation()}
+                             />
+                         ) : (
+                             <span className="nav-label truncate">{chat.title}</span>
+                         )}
+                       </div>
+                       
+                       {showExpanded && editingId !== chat.id && (
+                         <div className="history-actions flex-row items-center">
+                            <button className="context-btn" onClick={(e) => { e.stopPropagation(); handleRename(chat.id, chat.title); }} title="Rename session">
+                              <Pencil size={14} />
+                            </button>
+                            <button className="context-btn" onClick={(e) => deleteChat(e, chat.id)} title="Delete session">
+                              <Trash2 size={14} />
+                            </button>
+                         </div>
+                       )}
+                     </div>
+                   ))}
+
+                   {showExpanded && history.length > 3 && (
+                     <button 
+                       className="show-more-btn"
+                       onClick={() => setShowAllHistory(!showAllHistory)}
+                     >
+                       {showAllHistory ? 'Show less' : 'Show more'}
+                     </button>
+                   )}
+                 </>
+               )}
+                {activeView === 'learn' && (
+                 <>
+                   {/* My Learning Tree */}
+                   {showExpanded && (
+                     <div className="sidebar-section-header animate-fadeIn mt-2">
+                       <span className="section-header-title-small">My Learning</span>
                      </div>
                    )}
-                 </div>
-               ))}
+                   
+                   <div className="folder-tree-container">
+                     {/* Root Folder */}
+                     <div 
+                       className="folder-node" 
+                       onClick={(e) => toggleNode('subj-physics', e)}
+                     >
+                       <div className="folder-row">
+                         {expandedNodes['subj-physics'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                         {expandedNodes['subj-physics'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                         <span className="folder-label">Physics</span>
+                       </div>
+                     </div>
+                     
+                     {/* Level 1: Classes */}
+                     {expandedNodes['subj-physics'] && (
+                       <div className="folder-children">
+                         <div className="folder-node" onClick={(e) => toggleNode('phys-c11', e)}>
+                           <div className="folder-row">
+                             {expandedNodes['phys-c11'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                             {expandedNodes['phys-c11'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                             <span className="folder-label">Class 11</span>
+                           </div>
+                         </div>
+                         
+                         {/* Level 2: Chapters (Click to start teaching) */}
+                         {expandedNodes['phys-c11'] && (
+                           <div className="folder-children">
+                             <div className="folder-node recording-node" onClick={() => setActiveLearnChapter({ subject: 'Physics', chapter: 'Chapter 1: Units and Measurement' })}>
+                               <div className="folder-row">
+                                 <PlayCircle size={14} className="recording-icon" />
+                                 <span className="folder-label truncate">Chapter 1: Units and Measurement</span>
+                               </div>
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     )}
 
-               {showExpanded && history.length > 3 && (
-                 <button 
-                   className="show-more-btn"
-                   onClick={() => setShowAllHistory(!showAllHistory)}
-                 >
-                   {showAllHistory ? 'Show less' : 'Show more'}
-                 </button>
+                     {/* Other Subjects */}
+                     <div className="folder-node" onClick={(e) => toggleNode('subj-chem', e)}>
+                       <div className="folder-row">
+                         {expandedNodes['subj-chem'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                         {expandedNodes['subj-chem'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                         <span className="folder-label">Chemistry</span>
+                       </div>
+                     </div>
+                     <div className="folder-node" onClick={(e) => toggleNode('subj-math', e)}>
+                       <div className="folder-row">
+                         {expandedNodes['subj-math'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                         {expandedNodes['subj-math'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                         <span className="folder-label">Mathematics</span>
+                       </div>
+                     </div>
+                   </div>
+                 </>
+               )}
+
+               {activeView === 'practice' && (
+                 <>
+                   {showExpanded && (
+                     <div className="sidebar-section-header animate-fadeIn">
+                       <span className="section-header-title-small">Testing Modes</span>
+                     </div>
+                   )}
+                   <div className="nav-item practice-nav-item">
+                     <Award size={18} className="history-icon" />
+                     <span className="nav-label">Daily Challenge</span>
+                   </div>
+                   <div className="nav-item practice-nav-item">
+                     <Clock size={18} className="history-icon" />
+                     <span className="nav-label">Mock Exam Series</span>
+                   </div>
+                   <div className="nav-item practice-nav-item">
+                     <BarChart3 size={18} className="history-icon" />
+                     <span className="nav-label">Chapter Analytics</span>
+                   </div>
+
+                   {showExpanded && <div className="recent-label animate-fadeIn">Completed Tests</div>}
+                   <div className="nav-item history-item">
+                     <CheckCircle size={18} style={{ color: '#10b981' }} />
+                     <span className="nav-label truncate">{userTrack} Physics Quiz 1</span>
+                   </div>
+                   <div className="nav-item history-item">
+                     <CheckCircle size={18} style={{ color: '#10b981' }} />
+                     <span className="nav-label truncate">Chemical Bonding Practice</span>
+                   </div>
+                 </>
                )}
             </nav>
           </div>
 
-          <div className="sidebar-bottom flex-col">
-             <button className="nav-item" onClick={() => setShowSettings(true)} title="Settings">
-               <Settings size={20} className="history-icon" />
-               <span className="nav-label">Settings and help</span>
-             </button>
-             <button className="nav-item sidebar-signout-nav" onClick={onLogout} title="Sign Out">
-               <LogOut size={20} className="history-icon" />
-               <span className="nav-label">Sign Out</span>
-             </button>
+          {/* Sidebar blur overlay when dropdown open */}
+          {showProfileDropdown && (
+            <div className="sidebar-profile-blur-overlay" onClick={() => setShowProfileDropdown(false)} />
+          )}
+
+          {/* Redesigned Premium Profile Footer */}
+          <div className="sidebar-profile-wrapper">
+            {showExpanded ? (
+              <div className={`pf-card ${showProfileDropdown ? 'pf-card--open' : ''}`} onClick={() => setShowProfileDropdown(!showProfileDropdown)}>
+                <div className="pf-accent-bar" />
+                <div className="pf-inner">
+                  <div className="pf-avatar-ring">
+                    <div className="pf-avatar-ring__spin" />
+                    <div className="pf-avatar-core">
+                      {user?.username?.substring(0, 1).toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="pf-info">
+                    <span className="pf-name">{user?.username}</span>
+                    <span className="pf-plan-pill" data-plan={getPlanDescription().toLowerCase()}>
+                      <span className="pf-plan-dot" />
+                      {getPlanDescription()} Plan
+                    </span>
+                  </div>
+                  <ChevronDown size={14} className={`pf-chevron ${showProfileDropdown ? 'pf-chevron--up' : ''}`} />
+                </div>
+              </div>
+            ) : (
+              /* Collapsed: click avatar to EXPAND sidebar */
+              <div className="pf-collapsed" onClick={() => { setExpanded(true); }}>
+                <div className="pf-avatar-ring">
+                  <div className="pf-avatar-ring__spin" />
+                  <div className="pf-avatar-core">
+                    {user?.username?.substring(0, 1).toUpperCase()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showProfileDropdown && showExpanded && (
+              <div className="profile-dropdown-menu animate-slideUp">
+                <button className="dropdown-item" onClick={() => { setShowSettings(true); setShowProfileDropdown(false); }}>
+                  <Settings size={14} style={{ marginRight: '8px' }} /> Settings
+                </button>
+                <button className="dropdown-item danger" onClick={() => { onLogout(); setShowProfileDropdown(false); }}>
+                  <LogOut size={14} style={{ marginRight: '8px' }} /> Sign Out
+                </button>
+              </div>
+            )}
           </div>
         </>);
         })()}

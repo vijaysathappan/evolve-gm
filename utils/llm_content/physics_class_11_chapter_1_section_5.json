@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "The relative error of a value of number specified to significant figures depends not only on n but also on the number itself. For example, the accuracy in measurement of mass 1.02 g is ± 0.01 g whereas another measurement 9.89 g is also accurate to ± 0.01 g.",
+    "explanation": "Here is something really interesting — even if two measurements have the same absolute error, they are not equally precise in relative terms. Imagine you are racing cars and your GPS has an error of plus or minus 1 metre. If the race is only 10 metres long, that 1 metre error is huge — it is 10 percent of the total. But if the race is 1000 metres, that same 1 metre error is only 0.1 percent. Same absolute error, totally different relative impact. That is exactly what is happening here. A mass measurement of 1.02 grams with an error of 0.01 grams has a relative error of about 1 percent. But a measurement of 9.89 grams with the same 0.01 gram error has a relative error of only about 0.1 percent. So larger values generally give smaller relative errors."
+  }
+]

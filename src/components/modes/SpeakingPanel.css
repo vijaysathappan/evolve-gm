@@ -1,0 +1,99 @@
+/* ════════════════════════════════════════════════════════════
+   SpeakingPanel — Horizontal teleprompter bar
+   Controls: Play (top) → >> (mid) → |< (bottom)
+   Accent driven by --accent-brand (personalization)
+   ════════════════════════════════════════════════════════════ */
+
+.sp-root {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: linear-gradient(90deg, #0d0d1c 0%, #111128 100%);
+  color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  width: 100%;
+  height: 100px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+
+/* ─── Badge — hidden ────────────────────────────────────── */
+.sp-header { display: none; }
+
+/* ─── Scrollable text ───────────────────────────────────── */
+.sp-body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 32px;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  scrollbar-width: none;
+}
+.sp-body::-webkit-scrollbar { width: 0; }
+
+.sp-ticker    { margin: 0; }
+.sp-read      { color: rgba(255,255,255,0.28); }
+.sp-hl {
+  background: linear-gradient(120deg, rgba(250,204,21,0.92), rgba(251,146,60,0.88));
+  color: #0a0a14;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.sp-ahead     { color: rgba(255,255,255,0.78); }
+.sp-placeholder {
+  color: rgba(255,255,255,0.22);
+  font-style: italic;
+  font-size: 0.88rem;
+}
+
+/* ─── Controls column ────────────────────────────────────── */
+.sp-controls {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;        /* centre the group */
+  gap: 6px;                       /* tight gap between 3 buttons */
+  padding: 0 16px;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+
+/* ─── Base small speed button ────────────────────────────── */
+.sp-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+.sp-btn:hover {
+  background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.8);
+  transform: scale(1.1);
+}
+
+/* ─── Play / Pause — top, large, accent coloured ─────────── */
+.sp-btn-play {
+  width: 38px; height: 38px;
+  background: var(--accent-brand, #7c3aed);
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.sp-btn-play:hover {
+  transform: scale(1.12);
+  filter: brightness(1.15);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}

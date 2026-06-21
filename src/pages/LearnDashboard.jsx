@@ -1,110 +1,278 @@
-import React from 'react';
-import { Plus, Globe, Settings, LayoutGrid, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  BookOpen, X, Play, ChevronDown,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ChapterViewer from '../components/modes/ChapterViewer';
+import AITeacherPane from '../components/modes/AITeacherPane';
+import SpeakingPanel from '../components/modes/SpeakingPanel';
+import { NODE_API_URL } from '../config/api';
 import './LearnDashboard.css';
 
-export default function LearnDashboard() {
+const CHAPTERS_BY_SUBJECT = {
+  'Physics': [{ id: 'physics_ch1', name: 'Class 11 Chapter 1: Units and Measurement' }],
+  'Chemistry': [{ id: 'chem_ch1', name: 'Chapter 1: Chemical Bonding', isWeak: true }],
+  'Mathematics': [{ id: 'math_ch1', name: 'Chapter 1: Coordinate Geometry', isWeak: true }],
+};
+
+// ── LocalStorage helpers ──────────────────────────────────────────────────────
+const storageKey = (sub, ch, secTitle) =>
+  `ev_${sub}_${ch}_${secTitle}`.replace(/\s+/g, '_').toLowerCase();
+const chatKey = (sub, ch) =>
+  `ev_chat_${sub}_${ch}`.replace(/\s+/g, '_').toLowerCase();
+
+const saveExplanation = (sub, ch, secTitle, exps) => {
+  try { localStorage.setItem(storageKey(sub, ch, secTitle), JSON.stringify({ exps, ts: Date.now() })); } catch { }
+};
+const loadExplanation = (sub, ch, secTitle) => {
+  try {
+    const d = localStorage.getItem(storageKey(sub, ch, secTitle));
+    return d ? JSON.parse(d).exps : null;
+  } catch { return null; }
+};
+const saveChatHistory = (sub, ch, msgs) => {
+  try { localStorage.setItem(chatKey(sub, ch), JSON.stringify(msgs)); } catch { }
+};
+const loadChatHistory = (sub, ch) => {
+  try {
+    const d = localStorage.getItem(chatKey(sub, ch));
+    return d ? JSON.parse(d) : [];
+  } catch { return []; }
+};
+
+export default function LearnDashboard({ user, activeLearnChapter, setActiveLearnChapter }) {
   const navigate = useNavigate();
 
+  // ── UI state ─────────────────────────────────────────────────────────────────
+  const [modeState, setModeState] = useState('learning'); // Skip prompt
+  const [subject, setSubject] = useState(activeLearnChapter?.subject || '');
+  const [chapter, setChapter] = useState(activeLearnChapter?.chapter || '');
+  const [isSubjectOpen, setIsSubjectOpen] = useState(false);
+  const [isChapterOpen, setIsChapterOpen] = useState(false);
+
+  // ── Lesson content ────────────────────────────────────────────────────────────
+  const [sections, setSections] = useState([]);
+  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [sectionExplanations, setSectionExplanations] = useState([]);
+  const [activeParagraphIndex, setActiveParagraphIndex] = useState(0);
+  const [teachState, setTeachState] = useState('idle');
+  const [isExplainingLoading, setIsExplainingLoading] = useState(false);
+
+  // ── Ticker ────────────────────────────────────────────────────────────────────
+  const [tickerText, setTickerText] = useState('');
+  const [tickerWS, setTickerWS] = useState(-1);
+  const [tickerWE, setTickerWE] = useState(-1);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // ── Doubt ─────────────────────────────────────────────────────────────────────
+  const [doubtText, setDoubtText] = useState('');
+  const [isListening, setIsListening] = useState(false);
+
+
+
+  // ── Start Learning ────────────────────────────────────────────────────────────
+  const handleStartLearning = async (subj = subject, chap = chapter) => {
+    if (!subj.trim() || !chap.trim()) return;
+    setModeState('learning');
+    setIsGenerating(true);
+    setSectionExplanations([]);
+    setTickerText(''); setTickerWS(-1); setTickerWE(-1);
+    try {
+      const res = await fetch(`${NODE_API_URL}/api/learn/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subj, chapter: chap }),
+      });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      if (data.sections?.length > 0) {
+        setSections(data.sections);
+        setActiveSectionIndex(0);
+      } else {
+        throw new Error('No sections generated.');
+      }
+    } catch (err) {
+      console.error('Failed to generate lesson:', err);
+      setSections([{ title: 'Generation Failed', raw_text: `Could not generate content for ${chap}. Please try again later. Error: ${err.message}` }]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeLearnChapter) {
+      setSubject(activeLearnChapter.subject);
+      setChapter(activeLearnChapter.chapter);
+      // Wait for state to update
+      setTimeout(() => {
+        handleStartLearning(activeLearnChapter.subject, activeLearnChapter.chapter);
+      }, 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLearnChapter]);
+
+  const handlePlayPause = () => {
+    setTeachState(prev => (prev === 'explaining' ? 'paused' : 'explaining'));
+  };
+
+  const handleSkipForward = (seconds) => {
+    console.log(`Skipping forward ${seconds}s`);
+    // Placeholder for actual skip forward implementation
+  };
+
+  const handleSkipBackward = (seconds) => {
+    console.log(`Skipping backward ${seconds}s`);
+    // Placeholder for actual skip backward implementation
+  };
+
+  // ── Fetch explanations for active section ─────────────────────────────────────
+  useEffect(() => {
+    if (!sections?.length) return;
+    const sec = sections[activeSectionIndex];
+    if (!sec) return;
+
+    const cached = loadExplanation(subject, chapter, sec.title);
+    if (cached) {
+      setSectionExplanations(cached);
+      setActiveParagraphIndex(0);
+      setTeachState('explaining');
+      return;
+    }
+
+    const fetchExps = async () => {
+      setIsExplainingLoading(true);
+      setTeachState('idle');
+      setActiveParagraphIndex(0);
+      setSectionExplanations([]);
+      setTickerText(''); setTickerWS(-1); setTickerWE(-1);
+      try {
+        const res = await fetch(`${NODE_API_URL}/api/learn/explain-section`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_title: sec.title,
+            raw_text: sec.raw_text,
+            user_id: user?.id || user?.userId,
+            subject,
+            chapter,
+            sections,
+            active_idx: activeSectionIndex,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        if (data.explanations?.length > 0) {
+          setSectionExplanations(data.explanations);
+          saveExplanation(subject, chapter, sec.title, data.explanations);
+          setTeachState('explaining');
+        } else {
+          console.warn('No explanations generated for section:', sec.title);
+          setSectionExplanations(['No explanation available for this section.']);
+        }
+      } catch (err) {
+        console.error('Failed to fetch explanations:', err);
+        setSectionExplanations(['Failed to load explanations for this section.']);
+      } finally {
+        setIsExplainingLoading(false);
+      }
+    };
+    fetchExps();
+  }, [activeSectionIndex, sections]);
+
+  // ── PROMPT MODAL REMOVED ─────────────────────────────────────────────────────
+
+  // ── CLASSROOM VIEW (no sidebar) ───────────────────────────────────────────────
+  if (!activeLearnChapter) {
+    return (
+      <div className="cr-root flex-col items-center justify-center" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>
+          Select a chapter from the sidebar to start learning
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="dashboard-container">
-      <header className="dash-header">
-        <div className="dash-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <Globe className="text-muted" size={24} />
-          <span>Evolve GM <span className="text-muted" style={{ fontWeight: 400 }}>Learn Mode</span></span>
+    <div className="cr-root">
+      <div className="cr-main no-sidebar">
+
+        {/* LEFT: Interactive Book */}
+        <div className="cr-screen-content-wrapper">
+          <div className="cr-screen-topbar">
+            <div className="cr-screen-badge">
+              <span className="cr-screen-dot" />
+              INTERACTIVE BOOK
+            </div>
+            <span className="cr-screen-subject">
+              {subject} &middot; {chapter?.replace('Class 11 ', '')}
+            </span>
+            <button
+              className="cr-exit-btn"
+              onClick={() => setActiveLearnChapter(null)}
+              title="Exit Chapter"
+            >
+              <X size={15} /> Exit
+            </button>
+          </div>
+
+          <div className="cr-screen-content">
+            <ChapterViewer
+              sections={sections}
+              activeSectionIndex={activeSectionIndex}
+              onSectionClick={setActiveSectionIndex}
+              isLoading={isGenerating}
+              sectionExplanations={sectionExplanations}
+              activeSentenceIndex={activeParagraphIndex}
+              onSentenceClick={(idx) => { setActiveParagraphIndex(idx); setTeachState('explaining'); }}
+              teachState={teachState}
+              isExplainingLoading={isExplainingLoading}
+              onExit={() => setModeState('prompt')}
+              screenShareMode={true}
+            />
+          </div>
         </div>
-        <div className="dash-actions flex-row items-center gap-4">
-          <button className="pill-btn outline">
-             <Settings size={16} />
-             <span>Settings</span>
-          </button>
-          <div className="user-avatar" title="NEET Aspirant Profile">JD</div>
-        </div>
-      </header>
 
-      <main className="dash-main">
-        {/* Notebooks navigation */}
-        <div className="dash-tabs flex-row items-center justify-between">
-          <div className="flex-row items-center gap-4">
-             <button className="tab-pill active">All</button>
-             <button className="tab-pill">My modules</button>
-             <button className="tab-pill">Featured study guides</button>
-          </div>
-          
-          <div className="flex-row items-center gap-3">
-             <div className="flex-row items-center sort-toggle">
-               <button className="sort-btn active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M5 7h14M5 17h14"/></svg></button>
-               <button className="sort-btn"><LayoutGrid size={16}/></button>
-             </div>
-             
-             <button className="create-nb-btn primary flex-row items-center" onClick={() => navigate('/learn/new')}>
-               <Plus size={16} />
-               <span>Create new</span>
-             </button>
-          </div>
+        {/* RIGHT: Doubt / Discussion Chat */}
+        <div className="cr-chat-zone">
+          <AITeacherPane
+            user={user}
+            subject={subject}
+            chapter={chapter}
+            sections={sections}
+            activeSectionIndex={activeSectionIndex}
+            setActiveSectionIndex={setActiveSectionIndex}
+            isGenerating={isGenerating}
+            sectionExplanations={sectionExplanations}
+            activeSentenceIndex={activeParagraphIndex}
+            setActiveSentenceIndex={setActiveParagraphIndex}
+            teachState={teachState}
+            setTeachState={setTeachState}
+            isExplainingLoading={isExplainingLoading}
+            doubtText={doubtText}
+            setDoubtText={setDoubtText}
+            isListening={isListening}
+            setIsListening={setIsListening}
+            saveChatHistory={(msgs) => saveChatHistory(subject, chapter, msgs)}
+            loadChatHistory={() => loadChatHistory(subject, chapter)}
+            onTickerUpdate={(text, ws, we, speaking) => {
+              setTickerText(text); setTickerWS(ws); setTickerWE(we); setIsSpeaking(speaking);
+            }}
+          />
         </div>
 
-        {/* Featured Section */}
-        <section className="nb-section">
-          <h2 className="section-title">Featured NEET/JEE Guides</h2>
-          <div className="nb-grid featured-grid">
-            
-            <div className="nb-card featured image-bg bg-1">
-               <div className="overlay"></div>
-               <div className="nb-card-content">
-                  <div className="nb-category"><Globe size={14}/> Physics</div>
-                  <h3>Rotational Mechanics completely explained</h3>
-                  <div className="nb-meta">10 Mar 2026 • 15 sources</div>
-               </div>
-            </div>
+      </div>
 
-            <div className="nb-card featured image-bg bg-2">
-               <div className="overlay"></div>
-               <div className="nb-card-content">
-                  <div className="nb-category"><Globe size={14}/> Chemistry</div>
-                  <h3>Organic Mechanisms & Isomerism</h3>
-                  <div className="nb-meta">08 Mar 2026 • 24 sources</div>
-               </div>
-            </div>
-
-            <div className="nb-card featured image-bg bg-3">
-               <div className="overlay"></div>
-               <div className="nb-card-content">
-                  <div className="nb-category"><Globe size={14}/> Biology</div>
-                  <h3>Human Anatomy Flashcards & Quizzes</h3>
-                  <div className="nb-meta">01 Mar 2026 • 42 sources</div>
-               </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* Recent Section */}
-        <section className="nb-section">
-          <h2 className="section-title">Recent Modules</h2>
-          <div className="nb-grid recent-grid">
-            
-            <div className="nb-card create-card flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/learn/new')}>
-                <div className="create-icon-circle"><Plus size={24} color="var(--accent-blue)" /></div>
-                <span style={{color: 'var(--text-secondary)'}}>Create new module</span>
-            </div>
-
-            <div className="nb-card regular cursor-pointer" onClick={() => navigate('/learn/xyz-123')}>
-               <div className="nb-header-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
-               <h3>Electrostatics Notes</h3>
-               <div className="nb-meta mt-auto">8 Mar 2026 • 3 sources</div>
-            </div>
-
-            <div className="nb-card regular cursor-pointer" onClick={() => navigate('/learn/xyz-124')}>
-               <div className="nb-header-icon"><FileText color="var(--accent-purple)" /></div>
-               <h3>Kinematics Formulas</h3>
-               <div className="nb-meta mt-auto">7 Mar 2026 • 1 source</div>
-            </div>
-
-          </div>
-        </section>
-
-      </main>
+      {/* Speaking Panel */}
+      <SpeakingPanel
+        tickerText={tickerText}
+        tickerWS={tickerWS}
+        tickerWE={tickerWE}
+        isSpeaking={isSpeaking}
+        onPlayPause={handlePlayPause}
+        onSkipForward={handleSkipForward}
+        onSkipBackward={handleSkipBackward}
+      />
     </div>
   );
 }

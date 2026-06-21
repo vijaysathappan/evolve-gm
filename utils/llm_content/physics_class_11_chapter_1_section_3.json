@@ -1,0 +1,6 @@
+[
+  {
+    "paragraph": "In multiplication or division, the final result should retain as many significant figures as are there in the original number with the least significant figures. In addition or subtraction, the final result should retain as many decimal places as are there in the number with the least decimal places.",
+    "explanation": "Think of it this way — if your friend gives you an approximate speed and you multiply it by time to get distance, your answer can't magically be more precise than the original rough speed. That is the whole point of these rules. For multiplication and division, your answer keeps the same number of significant figures as the least precise input. So if one number has 3 significant figures and another has 5, your answer only gets 3. For addition and subtraction, you look at decimal places instead. If you add 12.9 and 7.06, the answer must stop at one decimal place because 12.9 only has one. You can't pretend you have more precision than your data actually gives you."
+  }
+]
