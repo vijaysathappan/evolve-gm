@@ -6,6 +6,10 @@
       "destination": "/api/query.py"
     },
     {
+      "source": "/api/learn/(.*)",
+      "destination": "/api/query.py"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/auth.js"
     },

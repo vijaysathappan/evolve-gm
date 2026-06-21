@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Mic, Send, Minimize2, ArrowUpRight, Loader2, SendHorizonal } from 'lucide-react';
-import { NODE_API_URL } from '../../config/api';
+import { NODE_API_URL, LLM_API_URL } from '../../config/api';
 import './AITeacherPane.css';
 
 export default function AITeacherPane({
@@ -190,7 +190,7 @@ export default function AITeacherPane({
     setMessages(prev => [...prev, { role: 'user', text }]);
     setDoubtText(''); setThinking(true); setIsAnsweringDoubt(true);
     try {
-      const res  = await fetch(`${NODE_API_URL}/api/learn/doubt`, {
+      const res  = await fetch(`${LLM_API_URL}/api/learn/doubt`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject, chapter, doubt: text,

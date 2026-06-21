@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import ChapterViewer from '../components/modes/ChapterViewer';
 import AITeacherPane from '../components/modes/AITeacherPane';
 import SpeakingPanel from '../components/modes/SpeakingPanel';
-import { NODE_API_URL } from '../config/api';
+import { NODE_API_URL, LLM_API_URL } from '../config/api';
 import './LearnDashboard.css';
 
 const CHAPTERS_BY_SUBJECT = {
@@ -79,7 +79,7 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
     setSectionExplanations([]);
     setTickerText(''); setTickerWS(-1); setTickerWE(-1);
     try {
-      const res = await fetch(`${NODE_API_URL}/api/learn/generate`, {
+      const res = await fetch(`${LLM_API_URL}/api/learn/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject: subj, chapter: chap }),
@@ -147,7 +147,7 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
       setSectionExplanations([]);
       setTickerText(''); setTickerWS(-1); setTickerWE(-1);
       try {
-        const res = await fetch(`${NODE_API_URL}/api/learn/explain-section`, {
+        const res = await fetch(`${LLM_API_URL}/api/learn/explain-section`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -21,6 +21,8 @@ services:
     ports:
       - "5000:5000"
     env_file: .env
+    environment:
+      - PYTHON_LLM_URL=http://llm-service:8000
     depends_on:
       - llm-service
 
