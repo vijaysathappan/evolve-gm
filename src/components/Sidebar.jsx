@@ -20,6 +20,17 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [totalTokens, setTotalTokens] = useState(0);
 
+  // Calendar State
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
   // My Learning Folder Tree state
   const [expandedNodes, setExpandedNodes] = useState({ 'my-learning': true });
   
@@ -810,7 +821,11 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       />
 
 
-      <aside className={`gemini-sidebar flex-col justify-between ${expanded ? 'expanded' : 'collapsed'} ${isMobile && mobileOpen ? 'mobile-open expanded' : ''}`}>
+      <aside 
+        className={`gemini-sidebar flex-col justify-between ${expanded ? 'expanded' : 'collapsed'} ${isMobile && mobileOpen ? 'mobile-open expanded' : ''}`}
+        onMouseEnter={() => { if (!isMobile) setExpanded(true); }}
+        onMouseLeave={() => { if (!isMobile) setExpanded(false); }}
+      >
         {/* showExpanded = true on desktop when expanded, always true inside mobile drawer */}
         {(() => {
           const showExpanded = expanded || (isMobile && mobileOpen);
@@ -831,51 +846,130 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                )}
             </div>
 
-            {showExpanded && (
-              <div className="sidebar-modes animate-fadeIn">
-                <button 
-                  className={`sidebar-mode-btn ${activeView === 'chat' ? 'active' : ''}`}
-                  onClick={() => setActiveView('chat')}
-                >
-                  Chat
-                </button>
-                <button 
-                  className={`sidebar-mode-btn ${activeView === 'learn' ? 'active' : ''}`}
-                  onClick={() => setActiveView('learn')}
-                >
-                  Learn
-                </button>
-                <button 
-                  className={`sidebar-mode-btn ${activeView === 'practice' ? 'active' : ''}`}
-                  onClick={() => setActiveView('practice')}
-                >
-                  Practice
-                </button>
+              {showExpanded ? (
+                <div className="sidebar-modes-segmented animate-fadeIn" style={{ 
+                  position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 6px', padding: '12px 8px', margin: '12px 8px',
+                  background: 'rgba(20, 20, 25, 0.8)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px'
+                }}>
+                  <button 
+                    onClick={() => setActiveView('learn')}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      padding: '8px 4px', borderRadius: '8px', border: '1px solid', borderColor: activeView === 'learn' ? 'rgba(255,255,255,0.1)' : 'transparent', cursor: 'pointer',
+                      background: activeView === 'learn' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      color: activeView === 'learn' ? '#fff' : 'var(--text-muted)',
+                      boxShadow: activeView === 'learn' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                      transition: 'all 0.2s ease', fontWeight: activeView === 'learn' ? 600 : 500
+                    }}
+                  >
+                    <BookOpen size={15} strokeWidth={2} />
+                    <span style={{ fontSize: '0.75rem' }}>Learn</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveView('ask')}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      padding: '8px 4px', borderRadius: '8px', border: '1px solid', borderColor: activeView === 'ask' ? 'rgba(255,255,255,0.1)' : 'transparent', cursor: 'pointer',
+                      background: activeView === 'ask' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      color: activeView === 'ask' ? '#fff' : 'var(--text-muted)',
+                      boxShadow: activeView === 'ask' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                      transition: 'all 0.2s ease', fontWeight: activeView === 'ask' ? 600 : 500
+                    }}
+                  >
+                    <MessageSquare size={15} strokeWidth={2} />
+                    <span style={{ fontSize: '0.75rem' }}>Ask</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveView('plan')}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      padding: '8px 4px', borderRadius: '8px', border: '1px solid', borderColor: activeView === 'plan' ? 'rgba(255,255,255,0.1)' : 'transparent', cursor: 'pointer',
+                      background: activeView === 'plan' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      color: activeView === 'plan' ? '#fff' : 'var(--text-muted)',
+                      boxShadow: activeView === 'plan' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                      transition: 'all 0.2s ease', fontWeight: activeView === 'plan' ? 600 : 500
+                    }}
+                  >
+                    <Calendar size={15} strokeWidth={2} />
+                    <span style={{ fontSize: '0.75rem' }}>Plan</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveView('practice')}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      padding: '8px 4px', borderRadius: '8px', border: '1px solid', borderColor: activeView === 'practice' ? 'rgba(255,255,255,0.1)' : 'transparent', cursor: 'pointer',
+                      background: activeView === 'practice' ? 'rgba(255,255,255,0.12)' : 'transparent',
+                      color: activeView === 'practice' ? '#fff' : 'var(--text-muted)',
+                      boxShadow: activeView === 'practice' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+                      transition: 'all 0.2s ease', fontWeight: activeView === 'practice' ? 600 : 500
+                    }}
+                  >
+                    <Award size={15} strokeWidth={2} />
+                    <span style={{ fontSize: '0.75rem' }}>Practice</span>
+                  </button>
+
+                  {/* Center Home Button */}
+                  <button 
+                    onClick={() => setActiveView('home')}
+                    title="Home Dashboard"
+                    style={{ 
+                      position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: '38px', height: '38px', borderRadius: '10px', border: '1px solid', borderColor: activeView === 'home' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)', cursor: 'pointer',
+                      background: activeView === 'home' ? 'rgba(255,255,255,0.15)' : 'rgba(30, 30, 35, 1)',
+                      color: activeView === 'home' ? '#fff' : 'var(--text-primary)',
+                      boxShadow: activeView === 'home' ? '0 2px 10px rgba(0,0,0,0.5)' : '0 2px 5px rgba(0,0,0,0.3)',
+                      transition: 'all 0.2s ease', zIndex: 10
+                    }}
+                  >
+                    <LayoutGrid size={18} strokeWidth={activeView === 'home' ? 2 : 1.5} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex-col items-center animate-fadeIn" style={{ gap: '14px', padding: '16px 0', width: '100%' }}>
+                  <button onClick={() => setActiveView('home')} title="Home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeView === 'home' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '10px', color: activeView === 'home' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <LayoutGrid size={22} />
+                  </button>
+                  <button onClick={() => setActiveView('learn')} title="Learn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeView === 'learn' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '10px', color: activeView === 'learn' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <BookOpen size={22} />
+                  </button>
+                  <button onClick={() => setActiveView('ask')} title="Ask" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeView === 'ask' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '10px', color: activeView === 'ask' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <MessageSquare size={22} />
+                  </button>
+                  <button onClick={() => setActiveView('plan')} title="Plan" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeView === 'plan' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '10px', color: activeView === 'plan' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <Calendar size={22} />
+                  </button>
+                  <button onClick={() => setActiveView('practice')} title="Practice" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeView === 'practice' ? 'rgba(255,255,255,0.1)' : 'transparent', padding: '10px', borderRadius: '10px', color: activeView === 'practice' ? '#fff' : 'var(--text-muted)', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <Award size={22} />
+                  </button>
+                </div>
+              )}
+
+            {(activeView === 'ask' || activeView === 'practice') && (
+              <div className="new-chat-wrapper">
+                {activeView === 'ask' && (
+                  <button className="new-chat-btn animate-fadeIn" title="New Chat" onClick={handleNewChat}>
+                    <Plus size={18} className="plus-icon" />
+                    {showExpanded && <span className="nav-label">New chat</span>}
+                  </button>
+                )}
+
+                {activeView === 'practice' && (
+                  <button className="new-chat-btn animate-fadeIn" title="Start Quiz" onClick={() => alert('Starting a randomized diagnostic practice session.')}>
+                    <Plus size={18} className="plus-icon" />
+                    {showExpanded && <span className="nav-label">Start quiz</span>}
+                  </button>
+                )}
               </div>
             )}
 
-            <div className="new-chat-wrapper">
-              {activeView === 'chat' && (
-                <button className="new-chat-btn animate-fadeIn" title="New Chat" onClick={handleNewChat}>
-                  <Plus size={18} className="plus-icon" />
-                  {showExpanded && <span className="nav-label">New chat</span>}
-                </button>
-              )}
-
-              {activeView === 'practice' && (
-                <button className="new-chat-btn animate-fadeIn" title="Start Quiz" onClick={() => alert('Starting a randomized diagnostic practice session.')}>
-                  <Plus size={18} className="plus-icon" />
-                  {showExpanded && <span className="nav-label">Start quiz</span>}
-                </button>
-              )}
-            </div>
-
             <nav className={`nav-menu flex-col w-full ${showAllHistory ? 'scrollable-menu custom-scrollbar' : ''}`}>
-               {activeView === 'chat' && (
+               {activeView === 'ask' && (
                  <>
                    {showExpanded && history.length > 0 && <div className="recent-label">Recent Chats</div>}
-                   
-                   {/* Chat History items */}
                    {displayedHistory.map((chat) => (
                      <div 
                         key={chat.id} 
@@ -918,80 +1012,102 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                        )}
                      </div>
                    ))}
-
                    {showExpanded && history.length > 3 && (
-                     <button 
-                       className="show-more-btn"
-                       onClick={() => setShowAllHistory(!showAllHistory)}
-                     >
+                     <button className="show-more-btn" onClick={() => setShowAllHistory(!showAllHistory)}>
                        {showAllHistory ? 'Show less' : 'Show more'}
                      </button>
                    )}
                  </>
                )}
+               {activeView === 'home' && showExpanded && (
+                  <div className="sidebar-quests-container animate-fadeIn" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Reminders / Smart Tasks - Gaming Style */}
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 4px' }}>
+                     <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#b900ff', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '2px', textShadow: '0 0 8px rgba(185, 0, 255, 0.6)' }}>Active Quests</span>
+                     
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(10, 10, 15, 0.6)', border: '1px solid rgba(185, 0, 255, 0.2)', borderLeft: '3px solid #b900ff', borderRadius: '4px', transition: 'all 0.2s ease', boxShadow: 'inset 20px 0 30px -20px rgba(185, 0, 255, 0.2)' }} className="task-card-hover">
+                       <CheckCircle size={14} style={{ color: '#b900ff', filter: 'drop-shadow(0 0 4px #b900ff)' }} />
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                         <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600, textShadow: '0 0 4px rgba(255,255,255,0.3)' }}>Start Chapter 1</span>
+                         <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>Physics - Units & Measurement</span>
+                       </div>
+                     </div>
+
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(10, 10, 15, 0.6)', border: '1px solid rgba(0, 243, 255, 0.2)', borderLeft: '3px solid #00f3ff', borderRadius: '4px', transition: 'all 0.2s ease', boxShadow: 'inset 20px 0 30px -20px rgba(0, 243, 255, 0.2)' }} className="task-card-hover">
+                       <div style={{ width: '12px', height: '12px', borderRadius: '2px', border: '2px solid #00f3ff', filter: 'drop-shadow(0 0 4px #00f3ff)' }} />
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                         <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600, textShadow: '0 0 4px rgba(255,255,255,0.3)' }}>Start Chapter 2</span>
+                         <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>Chemistry - Structure of Atom</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               )}
                 {activeView === 'learn' && (
                  <>
                    {/* My Learning Tree */}
                    {showExpanded && (
-                     <div className="sidebar-section-header animate-fadeIn mt-2">
-                       <span className="section-header-title-small">My Learning</span>
-                     </div>
-                   )}
-                   
-                   <div className="folder-tree-container">
-                     {/* Root Folder */}
-                     <div 
-                       className="folder-node" 
-                       onClick={(e) => toggleNode('subj-physics', e)}
-                     >
-                       <div className="folder-row">
-                         {expandedNodes['subj-physics'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                         {expandedNodes['subj-physics'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                         <span className="folder-label">Physics</span>
+                     <>
+                       <div className="sidebar-section-header animate-fadeIn mt-2">
+                         <span className="section-header-title-small">My Learning</span>
                        </div>
-                     </div>
-                     
-                     {/* Level 1: Classes */}
-                     {expandedNodes['subj-physics'] && (
-                       <div className="folder-children">
-                         <div className="folder-node" onClick={(e) => toggleNode('phys-c11', e)}>
+                       
+                       <div className="folder-tree-container">
+                         {/* Root Folder */}
+                         <div 
+                           className="folder-node" 
+                           onClick={(e) => toggleNode('subj-physics', e)}
+                         >
                            <div className="folder-row">
-                             {expandedNodes['phys-c11'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                             {expandedNodes['phys-c11'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                             <span className="folder-label">Class 11</span>
+                             {expandedNodes['subj-physics'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                             {expandedNodes['subj-physics'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                             <span className="folder-label">Physics</span>
                            </div>
                          </div>
                          
-                         {/* Level 2: Chapters (Click to start teaching) */}
-                         {expandedNodes['phys-c11'] && (
+                         {/* Level 1: Classes */}
+                         {expandedNodes['subj-physics'] && (
                            <div className="folder-children">
-                             <div className="folder-node recording-node" onClick={() => setActiveLearnChapter({ subject: 'Physics', chapter: 'Chapter 1: Units and Measurement' })}>
+                             <div className="folder-node" onClick={(e) => toggleNode('phys-c11', e)}>
                                <div className="folder-row">
-                                 <PlayCircle size={14} className="recording-icon" />
-                                 <span className="folder-label truncate">Chapter 1: Units and Measurement</span>
+                                 {expandedNodes['phys-c11'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                                 {expandedNodes['phys-c11'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                                 <span className="folder-label">Class 11</span>
                                </div>
                              </div>
+                             
+                             {/* Level 2: Chapters (Click to start teaching) */}
+                             {expandedNodes['phys-c11'] && (
+                               <div className="folder-children">
+                                 <div className="folder-node recording-node" onClick={() => setActiveLearnChapter({ subject: 'Physics', chapter: 'Chapter 1: Units and Measurement' })}>
+                                   <div className="folder-row">
+                                     <PlayCircle size={14} className="recording-icon" />
+                                     <span className="folder-label truncate">Chapter 1: Units and Measurement</span>
+                                   </div>
+                                 </div>
+                               </div>
+                             )}
                            </div>
                          )}
-                       </div>
-                     )}
 
-                     {/* Other Subjects */}
-                     <div className="folder-node" onClick={(e) => toggleNode('subj-chem', e)}>
-                       <div className="folder-row">
-                         {expandedNodes['subj-chem'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                         {expandedNodes['subj-chem'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                         <span className="folder-label">Chemistry</span>
+                         {/* Other Subjects */}
+                         <div className="folder-node" onClick={(e) => toggleNode('subj-chem', e)}>
+                           <div className="folder-row">
+                             {expandedNodes['subj-chem'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                             {expandedNodes['subj-chem'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                             <span className="folder-label">Chemistry</span>
+                           </div>
+                         </div>
+                         <div className="folder-node" onClick={(e) => toggleNode('subj-math', e)}>
+                           <div className="folder-row">
+                             {expandedNodes['subj-math'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
+                             {expandedNodes['subj-math'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
+                             <span className="folder-label">Mathematics</span>
+                           </div>
+                         </div>
                        </div>
-                     </div>
-                     <div className="folder-node" onClick={(e) => toggleNode('subj-math', e)}>
-                       <div className="folder-row">
-                         {expandedNodes['subj-math'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                         {expandedNodes['subj-math'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                         <span className="folder-label">Mathematics</span>
-                       </div>
-                     </div>
-                   </div>
+                     </>
+                   )}
                  </>
                )}
 

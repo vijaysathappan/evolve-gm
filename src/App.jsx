@@ -10,7 +10,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [userTrack, setUserTrack] = useState('JEE');
-  const [activeView, setActiveView] = useState('chat'); // 'chat' | 'learn' | 'practice'
+  const [activeView, setActiveView] = useState('home'); // 'home' | 'ask' | 'learn' | 'practice' | 'plan'
   const [activeLearnChapter, setActiveLearnChapter] = useState(null);
 
   const handleLogin = (userData) => {
@@ -59,6 +59,9 @@ function App() {
         return <LearnDashboard user={user} activeLearnChapter={activeLearnChapter} setActiveLearnChapter={setActiveLearnChapter} />;
       case 'practice':
         return <PracticeDashboard user={user} userTrack={userTrack} />;
+      case 'ask':
+      case 'plan':
+      case 'home':
       case 'chat':
       default:
         return (
@@ -68,6 +71,7 @@ function App() {
               selectedSessionId={selectedSessionId} 
               onSelectChat={handleSelectChat}
               onLogout={handleLogout} 
+              activeView={activeView}
           />
         );
     }

@@ -38,7 +38,7 @@ const Typewriter = ({ text, speed = 8, onComplete }) => {
   );
 };
 
-export default function MainPad({ user, selectedSessionId, onSelectChat, onLogout, userTrack }) {
+export default function MainPad({ user, selectedSessionId, onSelectChat, onLogout, userTrack, activeView }) {
   const [text, setText] = useState('');
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [thinkingMode, setThinkingMode] = useState('Fast');
@@ -445,14 +445,19 @@ export default function MainPad({ user, selectedSessionId, onSelectChat, onLogou
             <div className="greeting-title-row flex-row items-center justify-center">
               <h1 className="greeting-text flex-row items-center gap-2">
                 <span>{getGreeting().text}</span>
-                <img 
-                  src={getGreeting().emojiUrl} 
-                  alt={getGreeting().alt} 
-                  style={{ width: '42px', height: '42px', objectFit: 'contain', display: 'inline-block', verticalAlign: 'middle' }}
-                />
               </h1>
             </div>
             <p className="greeting-quote">"{currentQuote.text}" — {currentQuote.author}</p>
+            
+            {activeView === 'home' && (
+              <div className="important-notification-banner animate-fadeIn" style={{ marginTop: '24px', padding: '16px 24px', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', maxWidth: '600px', width: '100%' }}>
+                <Info size={24} style={{ color: '#f59e0b' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                  <span style={{ fontWeight: 600, color: '#f59e0b', fontSize: '0.9rem' }}>Latest News: NEET-UG 2024 Update</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>Supreme Court acknowledges isolated paper leaks but rules against mass cancellation. Re-test results for affected candidates are now declared.</span>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="chat-history-container custom-scrollbar flex-col w-full" ref={historyRef}>
@@ -616,8 +621,8 @@ export default function MainPad({ user, selectedSessionId, onSelectChat, onLogou
           </div>
         )}
 
-        {/* Input area is hidden when viewing an exam report */}
-        {!examReportData && (
+        {/* Input area is hidden when viewing an exam report or in home mode */}
+        {!examReportData && activeView !== 'home' && (
           <div className="chat-box-container flex-col gap-4">
             {attachments.length > 0 && (
             <div className="attachments-row flex-row w-full gap-3 pb-3">
