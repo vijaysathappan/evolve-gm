@@ -5,7 +5,7 @@ import {
   CreditCard, Lock, ArrowUpRight, Database, Calendar, Flame,
   CheckCircle, ChevronDown, ChevronRight, Pencil, Trash2,
   FileText, BookOpen, Globe, Clock, BarChart3,
-  Folder, FolderOpen, PlayCircle, X
+  Folder, FolderOpen, PlayCircle, X, Brain, Target
 } from 'lucide-react';
 import './Sidebar.css';
 import { API_BASE_URL } from '../config/api';
@@ -31,13 +31,9 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
 
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  // My Learning Folder Tree state
-  const [expandedNodes, setExpandedNodes] = useState({ 'my-learning': true });
-  
-  const toggleNode = (nodeId, e) => {
-    e.stopPropagation();
-    setExpandedNodes(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
-  };
+  // My Learning State (Compact Space-Saving Design)
+  const [learnSubject, setLearnSubject] = useState('Physics');
+  const [learnClass, setLearnClass] = useState('Class 11');
 
   const toggleSidebar = () => {
     if (isMobile) {
@@ -400,7 +396,6 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
   const categories = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={18} /> },
     { id: 'general', label: 'General', icon: <Settings size={18} /> },
-    { id: 'personalization', label: 'Personalization', icon: <Monitor size={18} /> },
     { id: 'account', label: 'Account', icon: <HelpCircle size={18} /> },
     { id: 'subscription', label: 'Subscription', icon: <CreditCard size={18} /> }
   ];
@@ -437,203 +432,76 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
               </div>
 
               <div className="dash-stat-card">
-                <div className="dash-stat-header">
-                  <Calendar size={16} className="dash-stat-icon days" />
-                  <span>Active Days</span>
+                <div className="dash-stat-header flex-row items-center justify-between w-full">
+                  <div className="flex-row items-center gap-2">
+                    <Brain size={16} className="dash-stat-icon" style={{ color: '#10b981', background: 'rgba(16,185,129,0.2)' }} />
+                    <span style={{ fontWeight: 600, color: '#fff' }}>Concept Mastery</span>
+                  </div>
                 </div>
-                <div className="dash-stat-value">{dashboardStats.activeDays}</div>
-                <div className="dash-stat-sub">Lifetime</div>
+                <div className="flex-row items-center justify-between w-full" style={{ marginTop: '12px' }}>
+                   <div className="dash-stat-value" style={{ fontSize: '1.25rem' }}>84%</div>
+                   <div className="dash-stat-sub">Top 12% of students</div>
+                </div>
               </div>
               
               <div className="dash-stat-card">
-                <div className="dash-stat-header">
-                  <Flame size={16} className="dash-stat-icon streak" />
-                  <span>Max Streak</span>
+                <div className="dash-stat-header flex-row items-center justify-between w-full">
+                  <div className="flex-row items-center gap-2">
+                    <Target size={16} className="dash-stat-icon" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.2)' }} />
+                    <span style={{ fontWeight: 600, color: '#fff' }}>Syllabus Covered</span>
+                  </div>
                 </div>
-                <div className="dash-stat-value">{dashboardStats.maxStreak}</div>
-                <div className="dash-stat-sub">Days</div>
+                <div className="flex-row items-center justify-between w-full" style={{ marginTop: '12px' }}>
+                   <div className="dash-stat-value" style={{ fontSize: '1.25rem' }}>32%</div>
+                   <div className="dash-stat-sub">Target: 100% by March</div>
+                </div>
               </div>
             </div>
 
-            <div className="heatmap-container">
-              <div className="heatmap-header flex-row items-center justify-between">
-                <div className="flex-col">
-                  <div className="heatmap-title">Activity Breakdown</div>
-                  <div className="heatmap-summary flex-row gap-4">
-                    <span>{
-                      Object.entries(heatmapData).filter(([dateStr, count]) => {
-                        if (selectedMonth === 'All') return dateStr.startsWith(selectedYear);
-                        const mIdx = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(selectedMonth);
-                        const expectedMonthStr = (mIdx + 1).toString().padStart(2, '0');
-                        return dateStr.startsWith(`${selectedYear}-${expectedMonthStr}`);
-                      }).reduce((acc, [_, count]) => acc + count, 0)
-                    } submissions in {selectedMonth === 'All' ? '' : selectedMonth + ' '}{selectedYear}</span>
-                  </div>
+            <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginTop: '24px' }}>
+              {/* Learning KPIs */}
+              <div className="analytics-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="analytics-header" style={{ marginBottom: '16px' }}>
+                  <span className="analytics-title" style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>Learning KPIs</span>
                 </div>
-                
-                <div className="heatmap-filters flex-row gap-2">
-                  <div className="custom-dropdown-container" ref={monthRef}>
-                    <button 
-                      className={`custom-dash-select ${isMonthOpen ? 'active' : ''}`}
-                      onClick={() => setIsMonthOpen(!isMonthOpen)}
-                    >
-                      <span>{selectedMonth}</span>
-                      <ChevronDown size={14} className={`select-arrow ${isMonthOpen ? 'rotated' : ''}`} />
-                    </button>
-                    
-                    {isMonthOpen && (
-                      <div className="custom-dropdown-menu custom-scrollbar animate-slideUp">
-                        {['All', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => (
-                          <div 
-                            key={m} 
-                            className={`dropdown-option ${selectedMonth === m ? 'selected' : ''}`}
-                            onClick={() => { setSelectedMonth(m); setIsMonthOpen(false); }}
-                          >
-                            {m === 'All' ? 'All Months' : m}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="custom-dropdown-container" ref={yearRef}>
-                    <button 
-                      className={`custom-dash-select ${isYearOpen ? 'active' : ''}`}
-                      onClick={() => setIsYearOpen(!isYearOpen)}
-                    >
-                      <span>{selectedYear}</span>
-                      <ChevronDown size={14} className={`select-arrow ${isYearOpen ? 'rotated' : ''}`} />
-                    </button>
-                    
-                    {isYearOpen && (
-                      <div className="custom-dropdown-menu animate-slideUp">
-                        {[0, 1, 2].map(offset => {
-                          const year = (new Date().getFullYear() - offset).toString();
-                          return (
-                            <div 
-                              key={year} 
-                              className={`dropdown-option ${selectedYear === year ? 'selected' : ''}`}
-                              onClick={() => { setSelectedYear(year); setIsYearOpen(false); }}
-                            >
-                              {year}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="heatmap-scroll-area custom-scrollbar">
-                <div className="heatmap-grid-wrapper">
-                  <div className="heatmap-labels-y">
-                    <span>Mon</span>
-                    <span>Wed</span>
-                    <span>Fri</span>
-                  </div>
-                  <div className="heatmap-grid" style={{ gap: '14px', alignItems: 'flex-start' }}>
-                    {(() => {
-                      const monthsList = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-                      const yearNum = parseInt(selectedYear);
-                      
-                      return monthsList.map((monthName) => {
-                        const mIdx = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(monthName);
-                        if (selectedMonth !== 'All' && selectedMonth !== monthName) return null;
-                        
-                        const daysInMonth = new Date(yearNum, mIdx + 1, 0).getDate();
-                        const cols = Math.ceil(daysInMonth / 7);
-                        
-                        return (
-                          <div key={monthName} className="heatmap-month-group flex-col" style={{ gap: '8px' }}>
-                            <div className="heatmap-month-block flex-row" style={{ gap: '4px' }}>
-                              {[...Array(cols)].map((_, colIndex) => (
-                                <div key={colIndex} className="heatmap-column">
-                                  {[...Array(7)].map((_, rowIndex) => {
-                                    const dayIdx = colIndex * 7 + rowIndex;
-                                    if (dayIdx >= daysInMonth) return <div key={rowIndex} className="heatmap-cell-empty" />;
-                                    
-                                    const expectedMonthStr = (mIdx + 1).toString().padStart(2, '0');
-                                    const expectedDayStr = (dayIdx + 1).toString().padStart(2, '0');
-                                    const dateKey = `${yearNum}-${expectedMonthStr}-${expectedDayStr}`;
-                                    const count = heatmapData[dateKey] || 0;
-                                    
-                                    let intensity = 0;
-                                    if (count > 0 && count <= 2) intensity = 1;
-                                    else if (count > 2 && count <= 5) intensity = 2;
-                                    else if (count > 5 && count <= 10) intensity = 3;
-                                    else if (count > 10) intensity = 4;
-                                    
-                                    return (
-                                      <div 
-                                        key={rowIndex} 
-                                        className={`heatmap-cell level-${intensity}`}
-                                        title={`${monthName} ${dayIdx + 1}: ${count} submissions`}
-                                      />
-                                    );
-                                  })}
-                                </div>
-                              ))}
-                            </div>
-                            <span className="heatmap-month-label">{monthName}</span>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><Clock size={14} style={{ color: '#60a5fa' }} /> Study Time</span>
+                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.timeUsageStr}</span>
+                   </div>
+                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><Calendar size={14} style={{ color: '#34d399' }} /> Active Days</span>
+                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.activeDays}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}> days</span></span>
+                   </div>
+                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><FileText size={14} style={{ color: '#fbbf24' }} /> Questions</span>
+                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.totalSubmissions.toLocaleString()}</span>
+                   </div>
+                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><Flame size={14} style={{ color: '#f87171' }} /> Max Streak</span>
+                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.maxStreak}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}> days</span></span>
+                   </div>
                 </div>
               </div>
 
-              <div className="heatmap-legend flex-row items-center gap-2">
-                <span>Less</span>
-                <div className="heatmap-cell level-0" />
-                <div className="heatmap-cell level-1" />
-                <div className="heatmap-cell level-2" />
-                <div className="heatmap-cell level-3" />
-                <div className="heatmap-cell level-4" />
-                <span>More</span>
-              </div>
-            </div>
-
-            <div className="token-chart-wrap analytics-dashboard" style={{ marginTop: '24px' }}>
-              <div className="token-chart-label-row flex-row items-center justify-between" style={{ marginBottom: '16px' }}>
-                <span style={{ fontSize: '1rem', color: 'var(--text-primary)', fontWeight: 700 }}>Advanced Consumption Analytics</span>
-              </div>
-              
-              <div className="analytics-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                {/* Panel 2: Usage by Mode */}
-                <div className="analytics-panel">
-                  <div className="analytics-header">
-                    <span className="analytics-title">Usage by Mode</span>
-                  </div>
-                  <div className="mode-bars flex-col gap-3">
-                    <div className="mode-bar-row">
-                      <div className="mode-label flex-row justify-between"><span>Exams</span> <span>{Math.round((tokenAnalytics.examMode / (totalTokens || 1)) * 100)}%</span></div>
-                      <div className="mode-progress"><div className="mode-fill exam-fill" style={{ width: `${(tokenAnalytics.examMode / (totalTokens || 1)) * 100}%` }}></div></div>
-                    </div>
-                    <div className="mode-bar-row">
-                      <div className="mode-label flex-row justify-between"><span>Quizzes</span> <span>{Math.round((tokenAnalytics.quizMode / (totalTokens || 1)) * 100)}%</span></div>
-                      <div className="mode-progress"><div className="mode-fill quiz-fill" style={{ width: `${(tokenAnalytics.quizMode / (totalTokens || 1)) * 100}%` }}></div></div>
-                    </div>
-                    <div className="mode-bar-row">
-                      <div className="mode-label flex-row justify-between"><span>Chat & Doubt</span> <span>{Math.round((tokenAnalytics.chatMode / (totalTokens || 1)) * 100)}%</span></div>
-                      <div className="mode-progress"><div className="mode-fill chat-fill" style={{ width: `${(tokenAnalytics.chatMode / (totalTokens || 1)) * 100}%` }}></div></div>
-                    </div>
-                  </div>
+              {/* Subject Proficiency Bars */}
+              <div className="analytics-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="analytics-header" style={{ marginBottom: '16px' }}>
+                  <span className="analytics-title" style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>Subject Proficiency</span>
                 </div>
-
-                {/* Panel 3: Monthly Forecast */}
-                <div className="analytics-panel">
-                  <div className="analytics-header">
-                    <span className="analytics-title">Monthly Forecast</span>
-                  </div>
-                  <div className="forecast-content flex-col items-center justify-center">
-                    <span className="forecast-value">{tokenAnalytics.forecast.toLocaleString()}</span>
-                    <span className="forecast-sub">Projected tokens this month</span>
-                    <div className="forecast-status" style={{ color: tokenAnalytics.forecast > 40000 ? '#ef4444' : '#10b981', marginTop: '12px', fontWeight: 600 }}>
-                      {tokenAnalytics.forecast > 40000 ? 'Warning: Limit Exceeded' : 'On Track'}
+                <div className="mode-bars flex-col gap-4">
+                    <div className="mode-bar-row">
+                      <div className="mode-label flex-row justify-between" style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}><span>Physics</span> <span style={{ color: '#00f3ff' }}>85%</span></div>
+                      <div className="mode-progress" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}><div className="mode-fill" style={{ width: '85%', height: '100%', background: '#00f3ff', boxShadow: '0 0 10px #00f3ff', borderRadius: '4px' }}></div></div>
                     </div>
-                  </div>
+                    <div className="mode-bar-row">
+                      <div className="mode-label flex-row justify-between" style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}><span>Chemistry</span> <span style={{ color: '#f59e0b' }}>62%</span></div>
+                      <div className="mode-progress" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}><div className="mode-fill" style={{ width: '62%', height: '100%', background: '#f59e0b', boxShadow: '0 0 10px #f59e0b', borderRadius: '4px' }}></div></div>
+                    </div>
+                    <div className="mode-bar-row">
+                      <div className="mode-label flex-row justify-between" style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}><span>Mathematics</span> <span style={{ color: '#d946ef' }}>92%</span></div>
+                      <div className="mode-progress" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}><div className="mode-fill" style={{ width: '92%', height: '100%', background: '#d946ef', boxShadow: '0 0 10px #d946ef', borderRadius: '4px' }}></div></div>
+                    </div>
                 </div>
               </div>
             </div>
@@ -668,60 +536,6 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                 <div className="flex-row items-center gap-2">
                   <span className="row-status">On</span>
                   <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-
-
-      case 'personalization':
-        return (
-          <div className="settings-pane animate-fadeIn">
-            <h3 className="pane-title">Personalization</h3>
-            <div className="pane-section">
-              <div className="settings-row flex-col" style={{ gap: '16px', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '24px' }}>
-                <div className="flex-col" style={{ gap: '4px' }}>
-                  <span className="row-label">Theme</span>
-                  <span className="row-desc">Choose how Evolve GM looks for you.</span>
-                </div>
-                <div className="theme-option-row flex-row gap-3">
-                  {['dark', 'light', 'midnight'].map(t => (
-                    <button
-                      key={t}
-                      className={`theme-option-btn ${theme === t ? 'active' : ''}`}
-                      onClick={() => applyTheme(t)}
-                    >
-                      <div className={`theme-preview theme-preview-${t}`}></div>
-                      <span style={{ textTransform: 'capitalize', fontSize: '0.85rem', marginTop: '8px' }}>{t}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="settings-row flex-col" style={{ gap: '16px', alignItems: 'flex-start' }}>
-                <div className="flex-col" style={{ gap: '4px' }}>
-                  <span className="row-label">Accent Color</span>
-                  <span className="row-desc">Customize highlights and interactive elements.</span>
-                </div>
-                <div className="accent-swatch-row flex-row gap-3 flex-wrap">
-                  {[
-                    { name: 'indigo', color: '#818cf8' },
-                    { name: 'blue', color: '#60a5fa' },
-                    { name: 'emerald', color: '#34d399' },
-                    { name: 'rose', color: '#fb7185' },
-                    { name: 'amber', color: '#fbbf24' },
-                    { name: 'violet', color: '#a78bfa' },
-                  ].map(({ name, color }) => (
-                    <button
-                      key={name}
-                      className={`accent-swatch ${accentColor === name ? 'active' : ''}`}
-                      style={{ background: color, boxShadow: accentColor === name ? `0 0 0 3px #fff, 0 0 0 5px ${color}` : 'none' }}
-                      onClick={() => applyAccent(name)}
-                      title={name}
-                    />
-                  ))}
                 </div>
               </div>
             </div>
@@ -1052,58 +866,56 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                          <span className="section-header-title-small">My Learning</span>
                        </div>
                        
-                       <div className="folder-tree-container">
-                         {/* Root Folder */}
-                         <div 
-                           className="folder-node" 
-                           onClick={(e) => toggleNode('subj-physics', e)}
-                         >
-                           <div className="folder-row">
-                             {expandedNodes['subj-physics'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                             {expandedNodes['subj-physics'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                             <span className="folder-label">Physics</span>
-                           </div>
+                       <div className="learn-compact-container" style={{ padding: '0 4px' }}>
+                         {/* Subject Selector */}
+                         <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '8px', marginBottom: '8px' }}>
+                           {['Physics', 'Chemistry', 'Mathematics'].map(subj => (
+                             <button 
+                               key={subj}
+                               onClick={() => setLearnSubject(subj)}
+                               style={{ flex: 1, padding: '6px 0', fontSize: '0.7rem', fontWeight: 600, borderRadius: '6px', 
+                               background: learnSubject === subj ? 'rgba(251, 191, 36, 0.12)' : 'transparent', 
+                               color: learnSubject === subj ? '#FBBF24' : 'var(--text-muted)' }}
+                             >
+                               {subj === 'Mathematics' ? 'Math' : subj}
+                             </button>
+                           ))}
                          </div>
                          
-                         {/* Level 1: Classes */}
-                         {expandedNodes['subj-physics'] && (
-                           <div className="folder-children">
-                             <div className="folder-node" onClick={(e) => toggleNode('phys-c11', e)}>
+                         {/* Class Selector */}
+                         <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '8px', marginBottom: '12px' }}>
+                           {['Class 11', 'Class 12'].map(cls => (
+                             <button 
+                               key={cls}
+                               onClick={() => setLearnClass(cls)}
+                               style={{ flex: 1, padding: '4px 0', fontSize: '0.7rem', fontWeight: 700, borderRadius: '6px', 
+                               background: learnClass === cls ? 'linear-gradient(135deg, #FBBF24 0%, #D97706 100%)' : 'transparent', 
+                               color: learnClass === cls ? '#111' : 'var(--text-muted)',
+                               boxShadow: learnClass === cls ? '0 0 12px rgba(217, 119, 6, 0.5)' : 'none' }}
+                             >
+                               {cls}
+                             </button>
+                           ))}
+                         </div>
+
+                         {/* Chapter List (Scrollable) */}
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '40vh', overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
+                           {[...Array(15)].map((_, i) => (
+                             <div 
+                               key={i} 
+                               className="folder-node recording-node" 
+                               onClick={() => setActiveLearnChapter({ subject: learnSubject, chapter: `Chapter ${i + 1}` })}
+                               style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.03)' }}
+                             >
                                <div className="folder-row">
-                                 {expandedNodes['phys-c11'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                                 {expandedNodes['phys-c11'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                                 <span className="folder-label">Class 11</span>
-                               </div>
-                             </div>
-                             
-                             {/* Level 2: Chapters (Click to start teaching) */}
-                             {expandedNodes['phys-c11'] && (
-                               <div className="folder-children">
-                                 <div className="folder-node recording-node" onClick={() => setActiveLearnChapter({ subject: 'Physics', chapter: 'Chapter 1: Units and Measurement' })}>
-                                   <div className="folder-row">
-                                     <PlayCircle size={14} className="recording-icon" />
-                                     <span className="folder-label truncate">Chapter 1: Units and Measurement</span>
-                                   </div>
+                                 <PlayCircle size={14} className="recording-icon" style={{ color: '#FBBF24', filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.5))' }} />
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+                                    <span className="folder-label truncate" style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>Chapter {i + 1}</span>
+                                    <span className="truncate" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{learnSubject} Core Topic {i + 1}</span>
                                  </div>
                                </div>
-                             )}
-                           </div>
-                         )}
-
-                         {/* Other Subjects */}
-                         <div className="folder-node" onClick={(e) => toggleNode('subj-chem', e)}>
-                           <div className="folder-row">
-                             {expandedNodes['subj-chem'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                             {expandedNodes['subj-chem'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                             <span className="folder-label">Chemistry</span>
-                           </div>
-                         </div>
-                         <div className="folder-node" onClick={(e) => toggleNode('subj-math', e)}>
-                           <div className="folder-row">
-                             {expandedNodes['subj-math'] ? <ChevronDown size={14} className="folder-chevron" /> : <ChevronRight size={14} className="folder-chevron" />}
-                             {expandedNodes['subj-math'] ? <FolderOpen size={16} className="folder-icon" /> : <Folder size={16} className="folder-icon" />}
-                             <span className="folder-label">Mathematics</span>
-                           </div>
+                             </div>
+                           ))}
                          </div>
                        </div>
                      </>

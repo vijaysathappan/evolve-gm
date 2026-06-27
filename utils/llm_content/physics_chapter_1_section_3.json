@@ -1,0 +1,14 @@
+[
+  {
+    "paragraph": "The result of a calculation involving approximate measured values of quantities (i.e. values with limited number of significant figures) must reflect the uncertainties in the original measured values. It cannot be more accurate than the original measured values themselves on which the result is based. In general, the final result should not have more significant figures than the original data from which it was obtained. Thus, if mass of an object is measured to be, say, 4.237 g (four significant figures) and its volume is measured to be 2.51 cm3, then its density, by mere arithmetic division, is 1.68804780876 g/cm3 upto 11 decimal places. It would be clearly absurd and irrelevant to record the calculated value of density to such a precision when the measurements on which the value is based, have much less precision. The following rules for arithmetic operations with significant figures ensure that the final result of a calculation is shown with the precision that is consistent with the precision of the input measured values :",
+    "explanation": "மன்னிக்கவும், இந்த பத்தியை விளக்குவதில் சிறு தடுமாற்றம்."
+  },
+  {
+    "paragraph": "(1) In multiplication or division, the final result should retain as many significant figures as are there in the original number with the least significant figures.\nThus, in the example above, density should be reported to three significant figures.\nDensity = 4.237g / 2.51 cm3 = 1.69 g cm-3\nSimilarly, if the speed of light is given as 3.00 × 10^8 m s-1 (three significant figure) and one year (1y = 365.25 d) has 3.1557 × 10^7 s (five significant figures), the light year is 9.47 × 10^15 m (three significant figures).",
+    "explanation": "மன்னிக்கவும், இந்த பத்தியை விளக்குவதில் சிறு தடுமாற்றம்."
+  },
+  {
+    "paragraph": "(2) In addition or subtraction, the final result should retain as many decimal places as are there in the number with the least decimal places.\nFor example, the sum of the numbers 436.32 g, 227.2 g and 0.301 g by mere arithmetic addition, is 663.821 g. But the least precise measurement (227.2 g) is correct to only one decimal place. The final result should, therefore, be rounded off to 663.8 g.\nSimilarly, the difference in length can be expressed as :\n0.307 m – 0.304 m = 0.003 m = 3 ×10–3 m.\nNote that we should not use the rule (1) applicable for multiplication and division and write 664 g as the result in the example of addition and 3.00 × 10–3 m in the example of subtraction. They do not convey the precision of measurement properly. For addition and subtraction, the rule is in terms of decimal places.",
+    "explanation": "மன்னிக்கவும், இந்த பத்தியை விளக்குவதில் சிறு தடுமாற்றம்."
+  }
+]
