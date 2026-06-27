@@ -2,7 +2,7 @@
 Custom SQLAlchemy types for cross-database compatibility.
 """
 import uuid
-from typing import Any
+from typing import Any, Optional
 from sqlalchemy.types import TypeDecorator, CHAR, DateTime
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from datetime import datetime, timezone
