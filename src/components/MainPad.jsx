@@ -54,7 +54,40 @@ export default function MainPad({ user, selectedSessionId, onSelectChat, onLogou
   const [selectedModel, setSelectedModel] = useState('Evolve 1 Low');
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [activeMode, setActiveMode] = useState(null); // null | 'quiz' | 'exam' | 'topics' | 'solve'
+  const [newsBatchIndex, setNewsBatchIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+  const [liveNews, setLiveNews] = useState([]);
+  const [selectedNews, setSelectedNews] = useState(null); // For Expanded View
+  const [showAllNews, setShowAllNews] = useState(false); // For All News Modal
+  const [newsFilter, setNewsFilter] = useState('All'); // 'All' | 'JEE' | 'NEET' | 'CBSE'
   const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    import('../config/supabaseClient').then(({ supabase }) => {
+      supabase.from('live_news').select('*').order('created_at', { ascending: false }).limit(60)
+        .then(({ data, error }) => {
+          if (data && !error) {
+            // Group by category to ensure a mix, or just shuffle
+            const shuffled = data.sort(() => 0.5 - Math.random());
+            setLiveNews(shuffled);
+          }
+        });
+    });
+  }, []);
+
+  useEffect(() => {
+    const totalBatches = Math.ceil(liveNews.length / 5);
+    if (totalBatches > 1) {
+      const interval = setInterval(() => {
+        setIsFading(true);
+        setTimeout(() => {
+          setNewsBatchIndex(prev => (prev + 1) % totalBatches);
+          setIsFading(false);
+        }, 500);
+      }, 60000); // 1 minute cycle as requested
+      return () => clearInterval(interval);
+    }
+  }, [liveNews.length]);
 
   const getGreeting = () => {
     const hr = new Date().getHours();
@@ -450,12 +483,43 @@ export default function MainPad({ user, selectedSessionId, onSelectChat, onLogou
             <p className="greeting-quote">"{currentQuote.text}" — {currentQuote.author}</p>
             
             {activeView === 'home' && (
-              <div className="important-notification-banner animate-fadeIn" style={{ marginTop: '24px', padding: '16px 24px', background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', maxWidth: '600px', width: '100%' }}>
-                <Info size={24} style={{ color: '#f59e0b' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                  <span style={{ fontWeight: 600, color: '#f59e0b', fontSize: '0.9rem' }}>Latest News: NEET-UG 2024 Update</span>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>Supreme Court acknowledges isolated paper leaks but rules against mass cancellation. Re-test results for affected candidates are now declared.</span>
+              <div 
+                className="live-news-container" 
+                style={{ 
+                  marginTop: '24px', 
+                  maxWidth: '800px', 
+                  width: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '12px',
+                  opacity: isFading ? 0 : 1,
+                  transition: 'opacity 0.5s ease-in-out'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', padding: '0 8px' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#a3a3a3', fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Live News Updates</span>
+                  <button onClick={() => setShowAllNews(true)} style={{ background: 'none', border: 'none', color: '#818cf8', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>View All News</button>
                 </div>
+                {liveNews.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '24px', color: '#a3a3a3', fontSize: '0.9rem' }}>Fetching latest news...</div>
+                )}
+                {liveNews.slice(newsBatchIndex * 5, (newsBatchIndex + 1) * 5).map(news => (
+                  <div 
+                    key={news.id} 
+                    className="important-notification-banner hover:bg-white/5 transition-colors" 
+                    onClick={() => setSelectedNews(news)}
+                    style={{ padding: '12px 20px', background: 'linear-gradient(135deg, rgba(20, 20, 25, 0.4) 0%, rgba(30, 30, 40, 0.4) 100%)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '12px', display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}
+                  >
+                    <Info size={18} style={{ color: '#818cf8', marginTop: '2px', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', flex: 1 }}>
+                      <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9rem', display: 'flex', justifyContent: 'space-between' }}>
+                        {news.title}
+                        <span style={{ fontSize: '0.75rem', color: '#93a5ff', fontWeight: 600, marginLeft: '8px', background: '#2c2e3e', padding: '3px 10px', borderRadius: '6px', letterSpacing: '0.5px', whiteSpace: 'nowrap', height: 'fit-content' }}>{news.category}</span>
+                      </span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px', lineHeight: 1.4 }}>{news.summary}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -871,6 +935,104 @@ export default function MainPad({ user, selectedSessionId, onSelectChat, onLogou
                 }}
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Expanded News Modal ── */}
+      {selectedNews && (
+        <div className="mode-overlay-backdrop" onClick={() => setSelectedNews(null)} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
+          <div className="animate-fadeIn" onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(145deg, #1e1e24 0%, #15151a 100%)', maxWidth: '650px', width: '90%', padding: '40px', borderRadius: '24px', border: '1px solid rgba(129, 140, 248, 0.15)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            
+            {/* Close Button */}
+            <button className="icon-btn" style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', padding: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSelectedNews(null)}>
+              <X size={20} color="#a3a3a3" />
+            </button>
+
+            {/* Header / Title */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '16px', paddingRight: '40px' }}>
+              <Info size={24} style={{ color: '#818cf8', flexShrink: 0, marginTop: '4px' }} />
+              <h2 style={{ fontSize: '1.4rem', color: '#f8fafc', margin: 0, lineHeight: 1.4, fontWeight: 700 }}>
+                {selectedNews.title}
+              </h2>
+            </div>
+
+            {/* Meta tags */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px', paddingLeft: '36px' }}>
+              <span style={{ fontSize: '0.8rem', padding: '4px 12px', background: '#2c2e3e', color: '#93a5ff', borderRadius: '6px', fontWeight: 600, letterSpacing: '0.5px' }}>{selectedNews.category}</span>
+              {selectedNews.published_at && (
+                <span style={{ fontSize: '0.85rem', color: '#828282', fontWeight: 500 }}>{new Date(selectedNews.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              )}
+            </div>
+
+            {/* Content summary */}
+            <p style={{ color: '#d1d5db', fontSize: '1.05rem', lineHeight: 1.7, marginBottom: '32px', paddingLeft: '36px', whiteSpace: 'pre-wrap' }}>
+              {selectedNews.summary}
+            </p>
+
+            {/* Action */}
+            <div style={{ paddingLeft: '36px', display: 'flex' }}>
+              <a href={selectedNews.source_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'rgba(129, 140, 248, 0.15)', color: '#93a5ff', padding: '12px 24px', borderRadius: '12px', textDecoration: 'none', fontSize: '0.95rem', fontWeight: 600, border: '1px solid rgba(147, 165, 255, 0.3)', transition: 'all 0.2s' }}>
+                <Globe size={18} /> Read Full Source
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── All News Modal ── */}
+      {showAllNews && (
+        <div className="mode-overlay-backdrop" onClick={() => setShowAllNews(false)} style={{ zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+          <div className="animate-fadeIn" onClick={e => e.stopPropagation()} style={{ background: '#1c1c1c', maxWidth: '800px', width: '90%', height: '80vh', display: 'flex', flexDirection: 'column', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.4rem', color: '#e2e8f0', margin: 0, display: 'flex', gap: '12px', alignItems: 'center' }}><Globe size={24} style={{color: '#818cf8'}}/> All Live News</h2>
+              <button className="icon-btn" onClick={() => setShowAllNews(false)}><X size={20} /></button>
+            </div>
+            
+            {/* Filters */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              {['All', 'JEE', 'NEET', 'CBSE'].map(filter => (
+                <button 
+                  key={filter} 
+                  onClick={() => setNewsFilter(filter)}
+                  style={{ 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    fontSize: '0.9rem',
+                    border: '1px solid',
+                    borderColor: newsFilter === filter ? '#818cf8' : 'rgba(255,255,255,0.1)',
+                    background: newsFilter === filter ? 'rgba(129, 140, 248, 0.1)' : 'transparent',
+                    color: newsFilter === filter ? '#818cf8' : '#a3a3a3',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            {/* List */}
+            <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '8px' }}>
+              {liveNews.filter(n => newsFilter === 'All' || n.category === newsFilter).map(news => (
+                <div 
+                  key={news.id} 
+                  className="important-notification-banner hover:bg-white/5 transition-colors" 
+                  onClick={() => { setShowAllNews(false); setSelectedNews(news); }}
+                  style={{ padding: '16px 20px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '12px', display: 'flex', alignItems: 'flex-start', gap: '16px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', flex: 1 }}>
+                    <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+                      {news.title}
+                      <span style={{ fontSize: '0.8rem', color: '#93a5ff', fontWeight: 600, marginLeft: '12px', background: '#2c2e3e', padding: '3px 10px', borderRadius: '6px', whiteSpace: 'nowrap', height: 'fit-content' }}>{news.category}</span>
+                    </span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '6px', lineHeight: 1.5 }}>{news.summary}</span>
+                  </div>
+                </div>
+              ))}
+              {liveNews.filter(n => newsFilter === 'All' || n.category === newsFilter).length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#a3a3a3' }}>No news found for {newsFilter}</div>
+              )}
+            </div>
           </div>
         </div>
       )}

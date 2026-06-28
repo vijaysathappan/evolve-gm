@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  BookOpen, X, Play, ChevronDown,
+  BookOpen, X, Play, ChevronDown, GripVertical, Columns, LayoutPanelLeft,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ChapterViewer from '../components/modes/ChapterViewer';
@@ -44,7 +44,8 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
   const navigate = useNavigate();
 
   // ── UI state ─────────────────────────────────────────────────────────────────
-  const [modeState, setModeState] = useState('learning'); // Skip prompt
+  const [modeState, setModeState] = useState('menu'); // menu, loading, learning
+  const [learningStyle, setLearningStyle] = useState('basic'); // 'basic' | 'ai_mastery' or 'basic'
   const [subject, setSubject] = useState(activeLearnChapter?.subject || '');
   const [chapter, setChapter] = useState(activeLearnChapter?.chapter || '');
   const [isSubjectOpen, setIsSubjectOpen] = useState(false);
@@ -62,7 +63,35 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
   // ── Ticker ────────────────────────────────────────────────────────────────────
   const [tickerText, setTickerText] = useState('');
   const [tickerWS, setTickerWS] = useState(-1);
-  const [tickerWE, setTickerWE] = useState(-1);
+  const [tickerWE, setTickerWE] = useState(0);
+  
+  const [bookWidth, setBookWidth] = useState(65);
+  const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
+
+  // ── RESIZE HANDLERS ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDraggingSplitter) return;
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      if (newWidth >= 20 && newWidth <= 80) {
+        setBookWidth(newWidth);
+      }
+    };
+    const handleMouseUp = () => setIsDraggingSplitter(false);
+
+    if (isDraggingSplitter) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      // Disable text selection while dragging
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.userSelect = 'auto';
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingSplitter]);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // ── Doubt ─────────────────────────────────────────────────────────────────────
@@ -71,24 +100,54 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
 
 
 
+  const [showPersonalizationModal, setShowPersonalizationModal] = useState(false);
+  const [personalizationInput, setPersonalizationInput] = useState('');
+  const [sessionId, setSessionId] = useState(null);
+  const [allSections, setAllSections] = useState([]);
+
   // ── Start Learning ────────────────────────────────────────────────────────────
-  const handleStartLearning = async (subj = subject, chap = chapter) => {
+  const handleStartLearning = async (subj = subject, chap = chapter, personalization = '') => {
     if (!subj.trim() || !chap.trim()) return;
     setModeState('learning');
     setIsGenerating(true);
     setSectionExplanations([]);
     setTickerText(''); setTickerWS(-1); setTickerWE(-1);
+    setShowPersonalizationModal(false);
+    
     try {
-      const res = await fetch(`${LLM_API_URL}/api/learn/generate`, {
+      const endpoint = learningStyle === 'basic' ? '/api/learn/raw_content' : '/api/learn/personalize_start';
+      const res = await fetch(`${LLM_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: subj, chapter: chap }),
+        body: JSON.stringify({ 
+          user_id: user?.id || user?.userId || 'unknown',
+          subject: subj, 
+          class_level: "Class 11", // Default for now
+          chapter_name: chap,
+          personalization: personalization || 'Make it easy to understand'
+        }),
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
-      if (data.sections?.length > 0) {
-        setSections(data.sections);
-        setActiveSectionIndex(0);
+      
+      if (data.all_sections) {
+        setSessionId(data.session_id || null);
+        setAllSections(data.all_sections || []);
+        
+        if (learningStyle === 'basic') {
+          // Display all sections instantly for basic mode
+          setSections(data.all_sections);
+          setActiveSectionIndex(0);
+          setSectionExplanations(data.all_sections.map(s => s.raw_text));
+        } else {
+          // Sequential generation for AI Mastery
+          setSections([data.concept]);
+          setActiveSectionIndex(0);
+          setSectionExplanations([data.concept.raw_text]);
+        }
+        
+        setActiveParagraphIndex(0);
+        setTeachState(learningStyle === 'basic' ? 'idle' : 'explaining');
       } else {
         throw new Error('No sections generated.');
       }
@@ -104,13 +163,15 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
     if (activeLearnChapter) {
       setSubject(activeLearnChapter.subject);
       setChapter(activeLearnChapter.chapter);
-      // Wait for state to update
-      setTimeout(() => {
-        handleStartLearning(activeLearnChapter.subject, activeLearnChapter.chapter);
-      }, 0);
+      if (learningStyle === 'ai_mastery') {
+        setShowPersonalizationModal(true);
+      } else {
+        // Just start default
+        handleStartLearning(activeLearnChapter.subject, activeLearnChapter.chapter, '');
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeLearnChapter]);
+  }, [activeLearnChapter, learningStyle]);
 
   const handlePlayPause = () => {
     setTeachState(prev => (prev === 'explaining' ? 'paused' : 'explaining'));
@@ -126,61 +187,42 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
     // Placeholder for actual skip backward implementation
   };
 
-  // ── Fetch explanations for active section ─────────────────────────────────────
-  useEffect(() => {
-    if (!sections?.length) return;
-    const sec = sections[activeSectionIndex];
-    if (!sec) return;
-
-    const cached = loadExplanation(subject, chapter, sec.title);
-    if (cached) {
-      setSectionExplanations(cached);
+  // We no longer need the old explain-section effect because personalize_start 
+  // generates the explanation directly.
+  
+  const handleConceptEvaluated = (newConcept) => {
+    if (newConcept) {
+      setSections(prev => [...prev, newConcept]);
+      setActiveSectionIndex(prev => prev + 1);
+      setSectionExplanations([newConcept.raw_text]);
       setActiveParagraphIndex(0);
       setTeachState('explaining');
-      return;
     }
+  };
 
-    const fetchExps = async () => {
-      setIsExplainingLoading(true);
-      setTeachState('idle');
-      setActiveParagraphIndex(0);
-      setSectionExplanations([]);
-      setTickerText(''); setTickerWS(-1); setTickerWE(-1);
-      try {
-        const res = await fetch(`${LLM_API_URL}/api/learn/explain-section`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            section_title: sec.title,
-            raw_text: sec.raw_text,
-            user_id: user?.id || user?.userId,
-            subject,
-            chapter,
-            sections,
-            active_idx: activeSectionIndex,
-          }),
-        });
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        if (data.explanations?.length > 0) {
-          setSectionExplanations(data.explanations);
-          saveExplanation(subject, chapter, sec.title, data.explanations);
-          setTeachState('explaining');
-        } else {
-          console.warn('No explanations generated for section:', sec.title);
-          setSectionExplanations(['No explanation available for this section.']);
-        }
-      } catch (err) {
-        console.error('Failed to fetch explanations:', err);
-        setSectionExplanations(['Failed to load explanations for this section.']);
-      } finally {
-        setIsExplainingLoading(false);
-      }
-    };
-    fetchExps();
-  }, [activeSectionIndex, sections]);
-
-  // ── PROMPT MODAL REMOVED ─────────────────────────────────────────────────────
+  // ── PERSONALIZATION MODAL ─────────────────────────────────────────────────────
+  const renderPersonalizationModal = () => {
+    if (!showPersonalizationModal) return null;
+    return (
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <div style={{ background: '#1e1e2e', padding: '32px', borderRadius: '16px', width: '500px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h2 style={{ margin: '0 0 16px 0', color: '#fff', fontSize: '1.5rem' }}>Personalize Your Learning</h2>
+          <p style={{ color: '#a3a3a3', marginBottom: '24px' }}>How would you like the AI to explain this chapter? (e.g. "Explain like I'm 5", "Use football analogies", "Focus heavily on numericals")</p>
+          <input 
+            type="text" 
+            value={personalizationInput}
+            onChange={(e) => setPersonalizationInput(e.target.value)}
+            placeholder="Your preference..."
+            style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.3)', color: '#fff', marginBottom: '24px', fontSize: '1rem' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button onClick={() => setShowPersonalizationModal(false)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#a3a3a3', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={() => handleStartLearning(subject, chapter, personalizationInput)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Start Learning</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // ── CLASSROOM VIEW (no sidebar) ───────────────────────────────────────────────
   if (!activeLearnChapter) {
@@ -196,27 +238,45 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
   return (
     <div className="cr-root">
       <div className="cr-main no-sidebar">
-
+        {renderPersonalizationModal()}
         {/* LEFT: Interactive Book */}
-        <div className="cr-screen-content-wrapper">
-          <div className="cr-screen-topbar">
-            <div className="cr-screen-badge">
-              <span className="cr-screen-dot" />
-              INTERACTIVE BOOK
+        <div className="cr-screen-content-wrapper" style={{ width: `${bookWidth}%`, flex: 'none' }}>
+          <div className="cr-screen-topbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div className="cr-screen-badge" style={{ display: 'flex', gap: '4px', padding: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '20px' }}>
+                <button 
+                  onClick={() => setLearningStyle('ai_mastery')}
+                  style={{ background: learningStyle === 'ai_mastery' ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : 'transparent', color: learningStyle === 'ai_mastery' ? '#fff' : '#a3a3a3', border: 'none', borderRadius: '16px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', boxShadow: learningStyle === 'ai_mastery' ? '0 4px 12px rgba(99, 102, 241, 0.4)' : 'none' }}>
+                  AI Mastery
+                </button>
+                <button 
+                  onClick={() => setLearningStyle('basic')}
+                  style={{ background: learningStyle === 'basic' ? '#333' : 'transparent', color: learningStyle === 'basic' ? '#fff' : '#a3a3a3', border: 'none', borderRadius: '16px', padding: '6px 16px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
+                  CBSE Basic
+                </button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '6px 16px', fontSize: '0.9rem', fontWeight: 600, letterSpacing: '0.5px' }}>
+                <span style={{ color: '#94a3b8' }}>{subject}</span>
+                <span style={{ color: '#475569', margin: '0 10px' }}>&bull;</span>
+                <span style={{ color: '#f1f5f9' }}>{chapter?.replace('Class 11 ', '')}</span>
+              </div>
             </div>
-            <span className="cr-screen-subject">
-              {subject} &middot; {chapter?.replace('Class 11 ', '')}
-            </span>
-            <button
-              className="cr-exit-btn"
-              onClick={() => setActiveLearnChapter(null)}
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+
+
+              <button
+                className="cr-exit-btn"
+                onClick={() => setActiveLearnChapter(null)}
               title="Exit Chapter"
+              style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
             >
-              <X size={15} /> Exit
+              <X size={16} /> Exit
             </button>
           </div>
+        </div>
 
-          <div className="cr-screen-content">
+        <div className="cr-screen-content">
             <ChapterViewer
               sections={sections}
               activeSectionIndex={activeSectionIndex}
@@ -226,29 +286,59 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
               activeSentenceIndex={activeParagraphIndex}
               onSentenceClick={(idx) => { setActiveParagraphIndex(idx); setTeachState('explaining'); }}
               teachState={teachState}
+              onPlayPause={handlePlayPause}
               isExplainingLoading={isExplainingLoading}
-              onExit={() => setModeState('prompt')}
-              screenShareMode={true}
+              onExit={() => setActiveLearnChapter(null)}
+              learningStyle={learningStyle}
+              // NEW PROPS FOR EVALUATION
+              sessionId={sessionId}
+              allSections={allSections}
+              subject={subject}
+              chapterName={chapter}
+              personalization={personalizationInput}
+              onConceptEvaluated={handleConceptEvaluated}
+              user={user}
             />
           </div>
         </div>
 
+        {/* SPLITTER */}
+        <div 
+          className="cr-splitter"
+          onMouseDown={() => setIsDraggingSplitter(true)}
+          style={{ 
+            width: '8px', 
+            cursor: 'col-resize', 
+            background: isDraggingSplitter ? '#8b5cf6' : 'rgba(255,255,255,0.02)', 
+            transition: 'background 0.2s',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'rgba(255,255,255,0.2)'
+          }}
+        >
+          <GripVertical size={16} />
+        </div>
+
         {/* RIGHT: Doubt / Discussion Chat */}
-        <div className="cr-chat-zone">
+        <div className="cr-chat-zone" style={{ width: `calc(${100 - bookWidth}% - 8px)`, flex: 'none' }}>
           <AITeacherPane
             user={user}
             subject={subject}
             chapter={chapter}
+            currentSection={sections[activeSectionIndex]}
             sections={sections}
             activeSectionIndex={activeSectionIndex}
             setActiveSectionIndex={setActiveSectionIndex}
-            isGenerating={isGenerating}
-            sectionExplanations={sectionExplanations}
-            activeSentenceIndex={activeParagraphIndex}
-            setActiveSentenceIndex={setActiveParagraphIndex}
             teachState={teachState}
             setTeachState={setTeachState}
+            activeSentenceIndex={activeParagraphIndex}
+            setActiveSentenceIndex={setActiveParagraphIndex}
+            learningStyle={learningStyle}
             isExplainingLoading={isExplainingLoading}
+            isGenerating={isGenerating}
+            sectionExplanations={sectionExplanations}
             doubtText={doubtText}
             setDoubtText={setDoubtText}
             isListening={isListening}
@@ -260,19 +350,7 @@ export default function LearnDashboard({ user, activeLearnChapter, setActiveLear
             }}
           />
         </div>
-
       </div>
-
-      {/* Speaking Panel */}
-      <SpeakingPanel
-        tickerText={tickerText}
-        tickerWS={tickerWS}
-        tickerWE={tickerWE}
-        isSpeaking={isSpeaking}
-        onPlayPause={handlePlayPause}
-        onSkipForward={handleSkipForward}
-        onSkipBackward={handleSkipBackward}
-      />
     </div>
   );
 }

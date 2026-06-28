@@ -1,343 +1,325 @@
-.chapter-container {
+.chapter-viewer-layout {
+  display: flex;
   height: 100%;
   width: 100%;
-  background: transparent; /* whiteboard bg comes from classroom-board parent */
+  background-color: #121212;
+  color: #e2e8f0;
+  overflow: hidden;
+}
+
+/* ── Left Sidebar (TOC) ── */
+.chapter-toc-sidebar {
+  width: 250px;
+  background-color: #1a1a1a;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 24px 0;
+  overflow-y: auto;
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.chapter-toc-sidebar.collapsed {
+  width: 0;
+  padding: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+.toc-header {
+  padding: 0 24px 16px;
+}
+
+.phase-pill {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.toc-list {
   display: flex;
   flex-direction: column;
 }
 
-.chapter-viewer-header {
-  padding: 10px 20px;
-  background: rgba(255,255,255,0.92);
-  border-bottom: 1px solid #ddd9cc;
-  gap: 14px;
-  height: 50px;
-  backdrop-filter: blur(8px);
-  flex-shrink: 0;
+.toc-item {
+  padding: 12px 24px;
+  display: flex;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #a3a3a3;
 }
 
-.exit-btn {
-  background: rgba(44,42,36,0.06);
-  border: 1px solid #ddd9cc;
-  color: #4a4840;
-  padding: 5px 12px;
-  border-radius: 6px;
+.toc-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: #e2e8f0;
+}
+
+.toc-item.active {
+  background: rgba(139, 92, 246, 0.05);
+  color: #8b5cf6;
+  border-left: 3px solid #8b5cf6;
+}
+
+.toc-number {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.toc-title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ── Main Content Area ── */
+.chapter-main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 40px;
+  background: #121212;
+}
+
+.article-container {
+  width: 100%;
+  max-width: 800px;
+}
+
+.article-meta {
+  margin-bottom: 16px;
+}
+
+.phase-tag {
+  background: rgba(255, 255, 255, 0.05);
+  color: #a3a3a3;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.article-title {
+  font-family: 'Georgia', serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #f8fafc;
+  line-height: 1.2;
+  margin: 0 0 24px 0;
+}
+
+.article-subheader {
+  display: flex;
+  gap: 24px;
+  color: #a3a3a3;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.prerequisites a {
+  color: #8b5cf6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.prerequisites a:hover {
+  text-decoration: underline;
+}
+
+.article-divider {
+  height: 2px;
+  background: rgba(139, 92, 246, 0.3);
+  width: 60px;
+  margin-bottom: 32px;
+}
+
+/* Voice Controls */
+.voice-controls {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.voice-btn {
+  background: transparent;
+  border: none;
+  color: #a3a3a3;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
-.exit-btn:hover {
-  background: rgba(124,58,237,0.08);
-  border-color: rgba(124,58,237,0.3);
-  color: #7c3aed;
+.voice-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
-.section-select-toc {
-  background: white;
-  border: 1px solid #ddd9cc;
-  color: #2c2a24;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  outline: none;
-  cursor: pointer;
-  max-width: 260px;
-  transition: border-color 0.2s;
+.voice-btn.primary {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
 }
 
-.section-select-toc:hover {
-  border-color: #7c3aed;
+.voice-btn.primary:hover {
+  background: rgba(139, 92, 246, 0.3);
+  color: #c4b5fd;
+  transform: scale(1.05);
 }
 
-.view-mode-toggle {
-  background: var(--bg-main);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 2px;
+.voice-status {
+  font-size: 0.85rem;
+  color: #8b5cf6;
+  font-weight: 500;
 }
 
-.toggle-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 18px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* Body Text */
+.article-body {
+  font-family: 'Inter', sans-serif;
 }
 
-.toggle-btn:hover {
-  color: var(--text-primary);
-}
-
-.toggle-btn.active {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 2px 8px rgba(140, 82, 255, 0.3);
-}
-
-.chapter-viewer-content-area {
-  position: relative;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.pdf-iframe-wrapper {
-  width: 100%;
-  height: 100%;
-  background: #FAFAF8;
-}
-
-.chapter-viewer-container {
-  height: 100%;
-  width: 100%;
-  background: #FAFAF8;
-  padding: 0;
-  overflow-y: auto;
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
-
-/* SCREEN-SHARE BOOK — fills entire whiteboard */
-.book-page {
-  width: 100%;
-  min-height: 100%;
-  background: #FAFAF8;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 36px 52px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.book-page-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  padding-bottom: 8px;
-  margin-bottom: 28px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  color: #7A766A;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.book-page-body {
-  flex: 1;
-}
-
-.book-section-title {
-  font-family: Georgia, serif;
-  font-size: 2.1rem;
-  font-weight: 700;
-  margin-bottom: 32px;
-  color: #1A365D; /* NCERT Navy Blue header */
-  line-height: 1.3;
-}
-
-/* Paragraph Blocks serif style */
-.paragraph-block {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.1rem;
-  line-height: 1.85;
-  color: #2D3748; /* Highly readable charcoal */
-  margin-bottom: 24px;
-  text-align: justify;
-  text-justify: inter-word;
-  transition: all 0.25s ease;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  border-left: 4px solid transparent;
-}
-
-.paragraph-block:hover {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-/* Paragraph Highlight classes */
-.paragraph-block.paragraph-explaining {
-  background: rgba(254, 240, 138, 0.5); /* Highlighter Yellow */
-  border-left-color: #D97706; /* Golden Amber */
-  color: #1A202C;
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.08);
-}
-
-.paragraph-block.paragraph-paused {
-  background: rgba(254, 240, 138, 0.3);
-  border-left-color: #F59E0B;
-  color: #1A202C;
-}
-
-.paragraph-block.paragraph-read {
-  color: #718096;
-  opacity: 0.75;
-}
-
-/* Drop Cap Style */
-.drop-cap {
-  font-family: Georgia, serif;
-  float: left;
-  font-size: 3.2rem;
-  line-height: 0.8;
-  padding-top: 4px;
-  padding-right: 8px;
-  padding-left: 3px;
-  font-weight: 700;
-  color: #1A365D; /* NCERT Blue */
-}
-
-.book-page-footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  padding-top: 12px;
-  margin-top: 40px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #7A766A;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-/* Tables, Examples and Unsolved styles */
-.book-page-extras {
-  margin-top: 36px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
-  padding-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.textbook-table-container {
-  background: #F4F1E8;
-  border: 1px solid #D6D2C4;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-}
-
-.table-caption {
+.article-paragraph {
   font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #1A365D;
+  line-height: 1.6;
+  color: #d1d5db;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-left: -12px;
+  cursor: pointer;
 }
 
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
+.article-paragraph:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.textbook-table {
+.mastery-active-paragraph {
+  background: rgba(139, 92, 246, 0.04) !important;
+  color: #f8fafc;
+  border-left: 3px solid rgba(139, 92, 246, 0.5);
+  padding-left: 14px;
+}
+
+.sidebar-toggle-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #a3a3a3;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+/* Tables */
+.article-table-wrapper {
+  margin: 32px 0;
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.article-table-caption {
+  padding: 16px 20px;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.article-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+}
+
+.article-table th {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 20px;
   text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a3a3a3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.textbook-table th {
-  background: #E5E1D4;
-  padding: 10px 12px;
-  color: #1A365D;
+.article-table td {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+  color: #cbd5e1;
+}
+
+/* ── Right Sidebar (OTP) ── */
+.chapter-on-this-page {
+  width: 250px;
+  padding: 40px 24px;
+  background-color: #121212;
+  flex-shrink: 0;
+}
+
+.otp-title {
+  font-size: 0.75rem;
   font-weight: 700;
-  border-bottom: 2px solid #C4C0B2;
+  color: #a3a3a3;
+  letter-spacing: 1px;
+  margin: 0 0 8px 0;
 }
 
-.textbook-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #E5E1D4;
-  color: #2D3748;
-}
-
-.textbook-table tr:hover td {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-.table-footnote {
+.otp-est-time {
   font-size: 0.8rem;
-  color: #7A766A;
-  margin-top: 8px;
-  font-style: italic;
+  color: #8b5cf6;
+  font-weight: 500;
+  margin-bottom: 24px;
 }
 
-.textbook-example-card {
-  background: #EEF4FA; /* Soft light blue NCERT example box */
-  border: 1px solid #D2E2F0;
-  border-left: 5px solid #1A365D;
-  border-radius: 8px;
-  padding: 18px;
+.otp-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.example-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #1A365D;
+.otp-list li {
+  font-size: 0.85rem;
+  color: #737373;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1.4;
 }
 
-.example-question, .example-answer {
-  font-size: 0.92rem;
-  margin-bottom: 8px;
-  color: #2D3748;
-  line-height: 1.6;
+.otp-list li:hover {
+  color: #d1d5db;
 }
 
-.example-answer {
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
-  padding-top: 12px;
-  margin-bottom: 0;
-}
-
-.textbook-unsolved-card {
-  background: #FDF7F5; /* Soft light orange/rust NCERT exercise box */
-  border: 1px solid #EADCD0;
-  border-left: 5px solid #8A1C14;
-  border-radius: 8px;
-  padding: 18px;
-}
-
-.unsolved-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #8A1C14;
-}
-
-.unsolved-text {
-  font-size: 0.92rem;
-  color: #2D3748;
-  white-space: pre-line;
-  line-height: 1.6;
-}
-
-/* Spinner */
-.book-loader {
-  width: 48px;
-  height: 48px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.loader-small {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.otp-list li.active {
+  color: #e2e8f0;
+  font-weight: 500;
 }

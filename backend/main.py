@@ -57,8 +57,10 @@ def standard_response(data: Any, message: str = "", request_id: str = "") -> Dic
     }
 
 from app.domains.user.router import router as user_router
+from app.domains.learning.router import router as learning_router
 
 app.include_router(user_router)
+app.include_router(learning_router)
 
 @app.get("/api/health")
 async def health_check(request: Request):

@@ -3,6 +3,11 @@ import { X, Mic, Send, Minimize2, ArrowUpRight, Loader2, SendHorizonal } from 'l
 import { NODE_API_URL, LLM_API_URL } from '../../config/api';
 import './AITeacherPane.css';
 
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html.replace(/<\/?[^>]+(>|$)/g, "");
+};
+
 export default function AITeacherPane({
   user, subject, chapter,
   sections = [], activeSectionIndex = 0, setActiveSectionIndex,
@@ -111,7 +116,8 @@ export default function AITeacherPane({
   }, [activeSectionIndex, sections]);
 
   // ── Core speak ────────────────────────────────────────────────────────────
-  const speakText = useCallback((text, { onEnd, forDoubt = false } = {}) => {
+  const speakText = useCallback((rawText, { onEnd, forDoubt = false } = {}) => {
+    const text = stripHtml(rawText);
     const synth = synthRef.current;
     if (!synth) return;
     synth.cancel();
@@ -147,11 +153,12 @@ export default function AITeacherPane({
   // ── Speak paragraph ───────────────────────────────────────────────────────
   const speakCurrentParagraph = useCallback(() => {
     if (isExplainingLoading || isGenerating || !sectionExplanations.length) return;
-    const item = sectionExplanations[activeSentenceIndex];
-    if (!item?.explanation) return;
+    const explanationText = sectionExplanations[activeSentenceIndex];
+    if (!explanationText) return;
 
-    speakText(item.explanation, {
+    speakText(explanationText, {
       onEnd: () => {
+        // We now rely on ChapterViewer's visual multiple choice for evaluation
         if (activeSentenceIndex < sectionExplanations.length - 1) {
           // No pause — advance immediately for continuous flow
           setActiveSentenceIndex(p => p + 1);
@@ -160,7 +167,7 @@ export default function AITeacherPane({
           setTeachState('idle');
           setMessages(prev => [...prev, {
             role: 'ai',
-            text: "That's it for this section! Ask me anything or move to the next one.",
+            text: "That's the concept! Take a look at the Knowledge Check below to proceed.",
             roleType: 'ai-done'
           }]);
         }
@@ -181,28 +188,39 @@ export default function AITeacherPane({
     }
   }, [activeSentenceIndex, teachState, isExplainingLoading, sectionExplanations]);
 
-  // ── Doubt ─────────────────────────────────────────────────────────────────
+  // ── Doubt ───────────────────────────────────────────────────
   const handleSendDoubt = async (override) => {
     const text = override ?? doubtText;
     if (!text.trim()) return;
     synthRef.current?.cancel(); setIsSpeaking(false); stopMouthAnim();
-    setIsListening(false); setTeachState('paused');
+    setIsListening(false); 
+    
+    setTeachState('paused');
     setMessages(prev => [...prev, { role: 'user', text }]);
     setDoubtText(''); setThinking(true); setIsAnsweringDoubt(true);
+    
     try {
-      const res  = await fetch(`${LLM_API_URL}/api/learn/doubt`, {
+      const endpoint = `${LLM_API_URL}/api/learn/doubt_eval`;
+      
+      const payload = {
+        query: text,
+        context: sectionExplanations[activeSentenceIndex] || sections[activeSectionIndex]?.raw_text || "",
+        history: messages.map(m => `${m.role === 'ai' ? 'Tutor' : 'Student'}: ${m.text}`)
+      };
+      
+      const res  = await fetch(endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject, chapter, doubt: text,
-          context: messages.map(m => `${m.role === 'ai' ? 'Tutor' : 'Student'}: ${m.text}`).join('\n'),
-          user_id: user?.userId
-        })
+        body: JSON.stringify(payload)
       });
       const data  = await res.json();
-      const reply = data.answer || "I couldn't get an answer. Try again!";
-      setMessages(prev => [...prev, { role: 'ai', text: reply, roleType: 'ai-doubt-answer' }]);
+      
+      let reply = stripHtml(data.answer || "I couldn't get an answer. Try again!");
+      let intensity = data.intensity || 'low';
+      
+      setMessages(prev => [...prev, { role: 'ai', text: reply, roleType: 'ai-doubt', intensity }]);
       speakText(reply, { forDoubt: true });
-    } catch {
+    } catch (err) {
+      console.error(err);
       setMessages(prev => [...prev, { role: 'ai', text: "Network error. Please retry.", roleType: 'ai-error' }]);
     } finally { setThinking(false); }
   };

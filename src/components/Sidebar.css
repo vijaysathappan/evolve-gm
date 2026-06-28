@@ -40,138 +40,18 @@
 
 /* Sidebar user card â€” mobile only (hidden on desktop) */
 .sidebar-user-card {
-  display: none;
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin: 0 8px 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
 }
-.sidebar-divider {
-  display: none;
-}
 
-@media (max-width: 768px) {
-  .gemini-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100dvh;
-    width: 280px !important;
-    z-index: 200;
-    transform: translateX(-105%);
-    /* Spring-eased slide â€” snappy open, smooth close */
-    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-                box-shadow 0.42s ease;
-    border-right: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 0 0 rgba(0,0,0,0);
-    background-color: rgba(10, 10, 12, 0.97);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    will-change: transform;
-  }
-
-  .gemini-sidebar.mobile-open {
-    transform: translateX(0);
-    box-shadow: 6px 0 48px rgba(0, 0, 0, 0.55), 2px 0 12px rgba(0,0,0,0.3);
-  }
-
-  /* On mobile, sidebar-top should take all available space */
-  .gemini-sidebar .sidebar-top {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
-  /* Pin settings to bottom inside mobile drawer */
-  .gemini-sidebar .sidebar-bottom {
-    flex-shrink: 0;
-    padding: 12px 0 24px 0;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    margin-top: 8px;
-  }
-
-  /* Make nav items left-aligned with padding in expanded mobile drawer */
-  .gemini-sidebar.mobile-open .nav-item {
-    justify-content: flex-start;
-    padding: 0 12px 0 20px;
-    border-radius: 0 20px 20px 0;
-    width: calc(100% - 12px);
-    animation: mob-item-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  /* Stagger each item */
-  .gemini-sidebar.mobile-open .nav-item:nth-child(1) { animation-delay: 0.05s; }
-  .gemini-sidebar.mobile-open .nav-item:nth-child(2) { animation-delay: 0.10s; }
-  .gemini-sidebar.mobile-open .nav-item:nth-child(3) { animation-delay: 0.14s; }
-  .gemini-sidebar.mobile-open .nav-item:nth-child(4) { animation-delay: 0.18s; }
-  .gemini-sidebar.mobile-open .nav-item:nth-child(5) { animation-delay: 0.21s; }
-  .gemini-sidebar.mobile-open .nav-item:nth-child(n+6) { animation-delay: 0.24s; }
-
-  @keyframes mob-item-in {
-    from { opacity: 0; transform: translateX(-14px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  /* Header logo+title slide in */
-  .gemini-sidebar.mobile-open .sidebar-header {
-    animation: mob-header-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: 0.02s;
-  }
-
-  @keyframes mob-header-in {
-    from { opacity: 0; transform: translateX(-10px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  /* Make new chat btn full width in mobile drawer */
-  .gemini-sidebar.mobile-open .new-chat-btn {
-    width: 100%;
-    padding: 0 12px;
-    justify-content: center;
-    animation: mob-item-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: 0.04s;
-  }
-
-
-  /* Backdrop overlay â€” uses opacity+visibility so CLOSE also fades */
-  .mobile-sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.52);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    z-index: 199;
-    /* Always rendered, toggled via opacity+visibility */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.38s ease, visibility 0.38s ease;
-  }
-
-  .mobile-sidebar-backdrop.visible {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  @keyframes backdropFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
-  /* â”€â”€ Mobile user card at bottom of sidebar â”€â”€ */
-  .sidebar-user-card {
-    display: flex !important;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    margin: 0 8px 4px 8px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 14px;
-  }
-
-  .sidebar-user-avatar {
+.sidebar-user-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1204,7 +1084,7 @@
   }
 }
 
-/* Advanced Settings Modal Overhaul */
+/* Advanced Settings Modal Overhaul (Claude Theme) */
 
 @keyframes slideUpModal {
   from { opacity: 0; transform: translateY(16px) scale(0.98); }
@@ -1212,159 +1092,155 @@
 }
 
 .settings-modal {
-  background-color: rgba(25, 25, 28, 0.6);
-  backdrop-filter: blur(32px) saturate(150%);
-  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  background-color: #2b2a2a;
   width: 900px;
   max-width: 95vw;
-  height: 600px;
+  height: 650px;
   max-height: 85vh;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
   display: flex;
   overflow: hidden;
-  animation: slideUpModal 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+/* X Close Button at Top Right of Modal */
+.settings-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+.settings-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .settings-sidebar {
-  width: 260px;
-  background: rgba(255, 255, 255, 0.02);
+  width: 250px;
+  background: #2b2a2a;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 24px 12px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
 }
 
-.settings-sidebar h2 {
-  font-size: 1.1rem;
-  font-weight: 600;
+/* Search Box in Sidebar */
+.settings-search-wrapper {
+  position: relative;
   margin-bottom: 24px;
-  padding-left: 12px;
-  color: var(--text-primary);
+}
+.settings-search-wrapper input {
+  width: 100%;
+  background: #3b3a3a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px 12px 8px 36px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.settings-search-wrapper input:focus {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.settings-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.settings-sidebar h3 {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding-left: 8px;
 }
 
 .settings-nav {
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .settings-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #a3a3a3;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
   width: 100%;
   text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
 .settings-nav-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
 }
 
 .settings-nav-item.active {
   background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+  color: #fff;
   font-weight: 500;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .settings-main-content {
   flex: 1;
-  padding: 32px 40px;
+  padding: 40px 48px;
   overflow-y: auto;
+  background: #2b2a2a;
 }
 
 .settings-pane {
-  max-width: 600px;
+  max-width: 100%;
 }
 
 .pane-title {
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 24px;
-  letter-spacing: -0.02em;
-  color: rgba(255, 255, 255, 0.95);
+  color: #fff;
 }
 
 .pane-section {
   display: flex;
   flex-direction: column;
   gap: 0;
+  margin-bottom: 40px;
 }
 
-/* General Styles */
-.promo-banner {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 32px;
-}
-
-.promo-icon-bg {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+/* Form Rows */
+.settings-form-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.promo-title { font-weight: 600; font-size: 1.1rem; }
-.promo-desc { font-size: 0.9rem; color: var(--text-muted); }
-.promo-btn {
-  background: #fff;
-  color: #000;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.settings-row {
-  padding: 20px 0;
+  justify-content: space-between;
+  padding: 16px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-
-.row-label { font-size: 1rem; font-weight: 500; }
-.row-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
-.row-status { font-size: 0.9rem; color: var(--text-primary); }
-
-.row-action-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-primary);
 }
 
-.row-select {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 12px;
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  outline: none;
-}
 
-.size-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 /* Subscription Styles */
 .current-plan-card {
@@ -2143,4 +2019,148 @@
   padding-top: 6px;
   padding-bottom: 6px;
   font-size: 0.82rem;
+}
+
+/* â”€â”€ Expanded Quests Modal â”€â”€ */
+
+@keyframes rippleBlur {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes burstFromBtn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translate(-50%, 50%);
+    transform-origin: bottom left;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+    transform-origin: center center;
+  }
+}
+
+.quests-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000; /* Above sidebar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: rippleBlur 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.quests-modal {
+  background-color: rgba(25, 25, 28, 0.7);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  width: 650px;
+  max-width: 90vw;
+  height: auto;
+  max-height: 80vh;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: burstFromBtn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.quests-modal-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.quests-modal-content {
+  padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.quest-list-item {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quest-list-item:hover {
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+
+.settings-form-row:last-child {
+  border-bottom: none;
+}
+
+.settings-form-label {
+  font-size: 0.95rem;
+  color: #e5e5e5;
+  font-weight: 500;
+}
+.settings-form-label-desc {
+  font-size: 0.85rem;
+  color: #a3a3a3;
+  margin-top: 6px;
+}
+
+.settings-form-input {
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: #000;
+  font-size: 0.9rem;
+  outline: none;
+  width: 280px;
+  text-align: left;
+}
+.settings-form-input:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.settings-form-select {
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: #000;
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  min-width: 140px;
+}
+.settings-form-select:hover {
+  background: #f5f5f5;
+}
+
+/* Avatar Circle */
+.settings-avatar {
+  width: 32px;
+  height: 32px;
+  background: #444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
 }

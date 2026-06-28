@@ -5,7 +5,7 @@ import {
   CreditCard, Lock, ArrowUpRight, Database, Calendar, Flame,
   CheckCircle, ChevronDown, ChevronRight, Pencil, Trash2,
   FileText, BookOpen, Globe, Clock, BarChart3,
-  Folder, FolderOpen, PlayCircle, X, Brain, Target
+  Folder, FolderOpen, PlayCircle, X, Brain, Target, Maximize2, Search
 } from 'lucide-react';
 import './Sidebar.css';
 import { API_BASE_URL } from '../config/api';
@@ -18,6 +18,7 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showQuestsModal, setShowQuestsModal] = useState(false);
   const [totalTokens, setTotalTokens] = useState(0);
 
   // Calendar State
@@ -405,104 +406,43 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       case 'dashboard':
         return (
           <div className="settings-pane animate-fadeIn">
-            <h3 className="pane-title">Dashboard</h3>
-            
-            <div className="dashboard-stats-grid bento-grid">
-              
-              <div className="dash-stat-card bento-wide" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)', borderColor: 'rgba(99,102,241,0.2)' }}>
-                <div className="dash-stat-header flex-row items-center justify-between w-full">
-                  <div className="flex-row items-center gap-2">
-                    <Database size={16} className="dash-stat-icon" style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.2)' }} />
-                    <span style={{ fontWeight: 600, color: '#fff' }}>Token Capacity</span>
-                  </div>
-                  <span className="dash-stat-sub" style={{ margin: 0 }}>{Math.round((totalTokens / 40000) * 100)}% Used</span>
-                </div>
-                
-                <div className="usage-progress-bar" style={{ marginTop: '16px', marginBottom: '8px', height: '8px' }}>
-                  <div 
-                    className="usage-progress-fill" 
-                    style={{ width: `${Math.min((totalTokens / 40000) * 100, 100)}%`, background: 'linear-gradient(90deg, #8b5cf6, #d946ef)' }}
-                  ></div>
-                </div>
-                
-                <div className="flex-row items-center justify-between w-full">
-                  <div className="dash-stat-value" style={{ fontSize: '1.25rem' }}>{totalTokens.toLocaleString()}</div>
-                  <div className="dash-stat-sub">of 40,000 Limit</div>
-                </div>
+            <h3 className="pane-title">Dashboard & Usage</h3>
+            <div className="pane-section">
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Token Capacity</div>
+                   <div className="settings-form-label-desc">{totalTokens.toLocaleString()} of 40,000 Limit</div>
+                 </div>
+                 <div className="settings-avatar" style={{ background: 'transparent', width: 'auto', color: '#8b5cf6' }}>
+                   {Math.round((totalTokens / 40000) * 100)}% Used
+                 </div>
               </div>
-
-              <div className="dash-stat-card">
-                <div className="dash-stat-header flex-row items-center justify-between w-full">
-                  <div className="flex-row items-center gap-2">
-                    <Brain size={16} className="dash-stat-icon" style={{ color: '#10b981', background: 'rgba(16,185,129,0.2)' }} />
-                    <span style={{ fontWeight: 600, color: '#fff' }}>Concept Mastery</span>
-                  </div>
-                </div>
-                <div className="flex-row items-center justify-between w-full" style={{ marginTop: '12px' }}>
-                   <div className="dash-stat-value" style={{ fontSize: '1.25rem' }}>84%</div>
-                   <div className="dash-stat-sub">Top 12% of students</div>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Concept Mastery</div>
+                   <div className="settings-form-label-desc">Top 12% of students</div>
+                 </div>
+                 <div className="settings-avatar" style={{ background: 'transparent', width: 'auto', color: '#10b981' }}>
+                   84%
+                 </div>
               </div>
-              
-              <div className="dash-stat-card">
-                <div className="dash-stat-header flex-row items-center justify-between w-full">
-                  <div className="flex-row items-center gap-2">
-                    <Target size={16} className="dash-stat-icon" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.2)' }} />
-                    <span style={{ fontWeight: 600, color: '#fff' }}>Syllabus Covered</span>
-                  </div>
-                </div>
-                <div className="flex-row items-center justify-between w-full" style={{ marginTop: '12px' }}>
-                   <div className="dash-stat-value" style={{ fontSize: '1.25rem' }}>32%</div>
-                   <div className="dash-stat-sub">Target: 100% by March</div>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Active Days</div>
+                   <div className="settings-form-label-desc">Consistent study schedule</div>
+                 </div>
+                 <div className="settings-avatar" style={{ background: 'transparent', width: 'auto', color: '#34d399' }}>
+                   {dashboardStats.activeDays} days
+                 </div>
               </div>
-            </div>
-
-            <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginTop: '24px' }}>
-              {/* Learning KPIs */}
-              <div className="analytics-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div className="analytics-header" style={{ marginBottom: '16px' }}>
-                  <span className="analytics-title" style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>Learning KPIs</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><Clock size={14} style={{ color: '#60a5fa' }} /> Study Time</span>
-                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.timeUsageStr}</span>
-                   </div>
-                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><Calendar size={14} style={{ color: '#34d399' }} /> Active Days</span>
-                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.activeDays}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}> days</span></span>
-                   </div>
-                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><FileText size={14} style={{ color: '#fbbf24' }} /> Questions</span>
-                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.totalSubmissions.toLocaleString()}</span>
-                   </div>
-                   <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}><Flame size={14} style={{ color: '#f87171' }} /> Max Streak</span>
-                      <span style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>{dashboardStats.maxStreak}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}> days</span></span>
-                   </div>
-                </div>
-              </div>
-
-              {/* Subject Proficiency Bars */}
-              <div className="analytics-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div className="analytics-header" style={{ marginBottom: '16px' }}>
-                  <span className="analytics-title" style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>Subject Proficiency</span>
-                </div>
-                <div className="mode-bars flex-col gap-4">
-                    <div className="mode-bar-row">
-                      <div className="mode-label flex-row justify-between" style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}><span>Physics</span> <span style={{ color: '#00f3ff' }}>85%</span></div>
-                      <div className="mode-progress" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}><div className="mode-fill" style={{ width: '85%', height: '100%', background: '#00f3ff', boxShadow: '0 0 10px #00f3ff', borderRadius: '4px' }}></div></div>
-                    </div>
-                    <div className="mode-bar-row">
-                      <div className="mode-label flex-row justify-between" style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}><span>Chemistry</span> <span style={{ color: '#f59e0b' }}>62%</span></div>
-                      <div className="mode-progress" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}><div className="mode-fill" style={{ width: '62%', height: '100%', background: '#f59e0b', boxShadow: '0 0 10px #f59e0b', borderRadius: '4px' }}></div></div>
-                    </div>
-                    <div className="mode-bar-row">
-                      <div className="mode-label flex-row justify-between" style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', color: 'var(--text-secondary)' }}><span>Mathematics</span> <span style={{ color: '#d946ef' }}>92%</span></div>
-                      <div className="mode-progress" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}><div className="mode-fill" style={{ width: '92%', height: '100%', background: '#d946ef', boxShadow: '0 0 10px #d946ef', borderRadius: '4px' }}></div></div>
-                    </div>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Max Streak</div>
+                   <div className="settings-form-label-desc">Longest learning streak</div>
+                 </div>
+                 <div className="settings-avatar" style={{ background: 'transparent', width: 'auto', color: '#f87171' }}>
+                   {dashboardStats.maxStreak} days
+                 </div>
               </div>
             </div>
 
@@ -512,31 +452,45 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       case 'general':
         return (
           <div className="settings-pane animate-fadeIn">
-            <h3 className="pane-title">General</h3>
+            <h3 className="pane-title">Preferences</h3>
             <div className="pane-section">
-              <div className="promo-banner flex-row items-center justify-between">
-                <div className="flex-row items-center gap-4">
-                  <div className="promo-icon-bg"><Lock size={20} /></div>
-                  <div className="flex-col">
-                    <span className="promo-title">Secure your account</span>
-                    <span className="promo-desc">Add MFA to protect your account when logging in.</span>
-                  </div>
-                </div>
-                <button className="promo-btn">Set up MFA</button>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Appearance</div>
+                 </div>
+                 <select className="settings-form-select">
+                   <option>System default</option>
+                   <option>Dark mode</option>
+                   <option>Light mode</option>
+                 </select>
               </div>
-              <div className="settings-row flex-row items-center justify-between">
-                <div className="flex-col">
-                  <span className="row-label">App updates</span>
-                  <span className="row-desc">Current version: 1.2024.5</span>
-                </div>
-                <button className="row-action-btn">Check for updates</button>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Chat font</div>
+                 </div>
+                 <select className="settings-form-select">
+                   <option>Inter (Default)</option>
+                   <option>Roboto</option>
+                   <option>Monospace</option>
+                 </select>
               </div>
-              <div className="settings-row flex-row items-center justify-between">
-                <span className="row-label">Launch at Login</span>
-                <div className="flex-row items-center gap-2">
-                  <span className="row-status">On</span>
-                  <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Motion</div>
+                 </div>
+                 <select className="settings-form-select">
+                   <option>Enabled</option>
+                   <option>Reduced</option>
+                 </select>
+              </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Launch at Login</div>
+                 </div>
+                 <div className="flex-row items-center gap-2">
+                   <span style={{ color: '#fff', fontSize: '0.9rem' }}>On</span>
+                   <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
+                 </div>
               </div>
             </div>
           </div>
@@ -547,36 +501,19 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
           <div className="settings-pane animate-fadeIn">
             <h3 className="pane-title">Subscription</h3>
             <div className="pane-section">
-              <div className="current-plan-card flex-row items-center justify-between" style={{ marginBottom: '24px' }}>
-                <div className="flex-col">
-                  <span className="plan-badge">CURRENT PLAN</span>
-                  <h4 className="plan-headline">Evolve Free</h4>
-                  <p className="plan-subline">Included for all users</p>
-                </div>
-                <button className="plan-manage-btn" disabled>Manage plan</button>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Current Plan</div>
+                   <div className="settings-form-label-desc">Evolve Free - Included for all users</div>
+                 </div>
+                 <button className="settings-form-select" disabled>Manage plan</button>
               </div>
-              <div className="plan-comparison-grid flex-row gap-4">
-                <div className="comp-card flex-col flex-1">
-                  <span className="comp-name">Evolve Free</span>
-                  <ul className="comp-features">
-                    <li><CheckCircle size={14} className="check-icon" /> 40k monthly tokens</li>
-                    <li><CheckCircle size={14} className="check-icon" /> Standard speed</li>
-                    <li><CheckCircle size={14} className="check-icon" /> Basic web search</li>
-                  </ul>
-                  <button className="comp-btn current">Your current plan</button>
-                </div>
-                <div className="comp-card pro flex-col flex-1">
-                  <div className="pro-label">MOST POPULAR</div>
-                  <span className="comp-name">Evolve Pro</span>
-                  <div className="comp-price">$15 <span className="price-term">/month</span></div>
-                  <ul className="comp-features">
-                    <li><CheckCircle size={14} className="check-icon" /> 5M monthly tokens</li>
-                    <li><CheckCircle size={14} className="check-icon" /> Ultra-fast response</li>
-                    <li><CheckCircle size={14} className="check-icon" /> Academic DB access</li>
-                    <li><CheckCircle size={14} className="check-icon" /> Image generation</li>
-                  </ul>
-                  <button className="comp-btn upgrade">Upgrade to Pro</button>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Available Upgrade</div>
+                   <div className="settings-form-label-desc">Evolve Pro - $15/month</div>
+                 </div>
+                 <button className="settings-form-select" style={{ color: '#818cf8', borderColor: 'rgba(129, 140, 248, 0.3)' }}>Upgrade</button>
               </div>
             </div>
           </div>
@@ -585,41 +522,49 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       default:
         return (
           <div className="settings-pane animate-fadeIn">
-            <h3 className="pane-title">Account</h3>
-            <div className="acct-profile-card">
-              <div className="acct-avatar">{(user?.username || user?.userId || '??').substring(0, 2).toUpperCase()}</div>
-              <div className="acct-identity">
-                <span className="acct-name">{user?.username}</span>
-                <span className="acct-email">{user?.email || '—'}</span>
-              </div>
-            </div>
+            <h3 className="pane-title">Profile</h3>
             <div className="pane-section">
-              <div className="settings-row flex-row items-center justify-between">
-                <div className="flex-col">
-                  <span className="row-label">Full Name</span>
-                  <span className="row-desc">{user?.username}</span>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Avatar</div>
+                 </div>
+                 <div className="settings-avatar">
+                   {(user?.username || user?.userId || 'V').substring(0, 1).toUpperCase()}
+                 </div>
               </div>
-              <div className="settings-row flex-row items-center justify-between">
-                <div className="flex-col">
-                  <span className="row-label">User ID</span>
-                  <span className="row-desc" style={{ fontFamily: 'monospace', letterSpacing: '0.03em' }}>{user?.userId || user?.id}</span>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Full name</div>
+                 </div>
+                 <input type="text" className="settings-form-input" defaultValue={user?.username || 'Vijay'} />
               </div>
-              <div className="settings-row flex-row items-center justify-between">
-                <div className="flex-col">
-                  <span className="row-label">Email Address</span>
-                  <span className="row-desc">{user?.email || 'Not set'}</span>
-                </div>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">What should we call you?</div>
+                 </div>
+                 <input type="text" className="settings-form-input" defaultValue={user?.username || 'Vijay'} />
               </div>
-              <div className="settings-row flex-row items-center justify-between">
-                <div className="flex-col">
-                  <span className="row-label">Plan</span>
-                  <span className="row-desc">Evolve Free</span>
-                </div>
-                <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '20px', background: 'rgba(129,140,248,0.15)', color: '#818cf8', fontWeight: 700 }}>FREE</span>
+              <div className="settings-form-row">
+                 <div className="flex-col">
+                   <div className="settings-form-label">Which curriculum/exam are you studying for?</div>
+                 </div>
+                 <select className="settings-form-select">
+                   <option>Select</option>
+                   <option>CBSE</option>
+                   <option>JEE Main / Advanced</option>
+                   <option>NEET</option>
+                   <option>Other</option>
+                 </select>
               </div>
             </div>
+            
+            <h3 className="pane-title" style={{ marginTop: '40px' }}>Instructions for AI</h3>
+            <p className="settings-form-label-desc" style={{ marginBottom: '16px' }}>The AI will keep these in mind across chats and sessions.</p>
+            <textarea 
+              className="settings-form-input" 
+              style={{ width: '100%', height: '100px', resize: 'none' }} 
+              placeholder="e.g. I am a high school senior studying AP Calculus. I prefer step-by-step explanations."
+            ></textarea>
           </div>
         );
     }
@@ -837,7 +782,12 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
                   <div className="sidebar-quests-container animate-fadeIn" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {/* Reminders / Smart Tasks - Gaming Style */}
                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 4px' }}>
-                     <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#b900ff', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '2px', textShadow: '0 0 8px rgba(185, 0, 255, 0.6)' }}>Active Quests</span>
+                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                       <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#b900ff', textTransform: 'uppercase', letterSpacing: '0.15em', textShadow: '0 0 8px rgba(185, 0, 255, 0.6)' }}>Active Quests</span>
+                       <button onClick={() => setShowQuestsModal(true)} style={{ background: 'transparent', border: 'none', color: '#b900ff', cursor: 'pointer', display: 'flex', padding: '2px', borderRadius: '4px', transition: 'all 0.2s', opacity: 0.8 }} className="task-card-hover" title="Expand Quests">
+                         <Maximize2 size={12} />
+                       </button>
+                     </div>
                      
                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(10, 10, 15, 0.6)', border: '1px solid rgba(185, 0, 255, 0.2)', borderLeft: '3px solid #b900ff', borderRadius: '4px', transition: 'all 0.2s ease', boxShadow: 'inset 20px 0 30px -20px rgba(185, 0, 255, 0.2)' }} className="task-card-hover">
                        <CheckCircle size={14} style={{ color: '#b900ff', filter: 'drop-shadow(0 0 4px #b900ff)' }} />
@@ -1015,11 +965,13 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
       {showSettings && (
         <div className="modal-overlay flex-row items-center justify-center">
           <div className="settings-modal flex-row">
+             <button className="settings-close-btn" onClick={() => setShowSettings(false)}><X size={24} /></button>
              <div className="settings-sidebar flex-col">
-                <div className="modal-header flex-row items-center justify-between">
-                   <h2>Settings</h2>
-                   <button className="icon-btn" onClick={() => setShowSettings(false)}><X size={20} /></button>
+                <div className="settings-search-wrapper">
+                   <Search size={16} className="settings-search-icon" />
+                   <input type="text" placeholder="Search" />
                 </div>
+                <h3>Settings</h3>
                 <nav className="settings-nav flex-col">
                    {categories.map(cat => (
                       <button 
@@ -1052,6 +1004,42 @@ export default function Sidebar({ user, selectedSessionId, onSelectChat, onLogou
             <div className="delete-modal-actions">
               <button className="delete-modal-cancel" onClick={() => setDeletingId(null)}>Cancel</button>
               <button className="delete-modal-confirm" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded Quests Modal */}
+      {showQuestsModal && (
+        <div className="quests-modal-overlay flex-row items-center justify-center" onClick={() => setShowQuestsModal(false)}>
+          <div className="quests-modal" onClick={e => e.stopPropagation()}>
+            <div className="quests-modal-header flex-row items-center justify-between">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                 <Target size={26} style={{ color: '#b900ff' }} />
+                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Active Quests</h2>
+              </div>
+              <button className="icon-btn" onClick={() => setShowQuestsModal(false)} style={{ color: 'var(--text-muted)' }}><X size={24} /></button>
+            </div>
+            
+            <div className="quests-modal-content custom-scrollbar">
+               {/* Quest 1 */}
+               <div className="quest-list-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(10, 10, 15, 0.6)', border: '1px solid rgba(185, 0, 255, 0.2)', borderLeft: '3px solid #b900ff', borderRadius: '8px', marginBottom: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+                 <CheckCircle size={18} style={{ color: '#b900ff', filter: 'drop-shadow(0 0 4px #b900ff)' }} />
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                   <span style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 600 }}>Start Chapter 1</span>
+                   <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Physics - Units & Measurement</span>
+                 </div>
+               </div>
+
+               {/* Quest 2 */}
+               <div className="quest-list-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(10, 10, 15, 0.6)', border: '1px solid rgba(0, 243, 255, 0.2)', borderLeft: '3px solid #00f3ff', borderRadius: '8px', marginBottom: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: '2px solid #00f3ff', boxShadow: '0 0 6px #00f3ff' }}></div>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                   <span style={{ fontSize: '0.95rem', color: '#fff', fontWeight: 600 }}>Start Chapter 2</span>
+                   <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Chemistry - Structure of Atom</span>
+                 </div>
+               </div>
+               
             </div>
           </div>
         </div>
