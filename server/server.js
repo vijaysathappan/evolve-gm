@@ -504,10 +504,11 @@ app.post('/api/learn/doubt', async (req, res) => {
   }
 });
 
-// Allow local development to listen on a port
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+// Allow local development and traditional server hosting to listen on a port
+// If deploying on Vercel as serverless, process.env.VERCEL will be true and we don't start the listener.
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
   });
 }
 
