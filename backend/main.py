@@ -4,10 +4,20 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from typing import Any, Dict
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title="Evolve Learn Platform",
     description="Research-Grade AI Platform Foundation",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Rule 10: Every request gets Request ID.
